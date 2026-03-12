@@ -146,13 +146,23 @@ _grim_command_validate() {
 }
 
 # Set a completer function for a specific parameter
-# Usage: _grim_command_set_complete "my_func" "--foo" "my_completer_func"
+# Usage: _grim_command_set_complete "my_func" "foo" "my_completer_func"
+#        _grim_command_set_complete "my_func" "bar"
 _grim_command_set_complete() {
     local func="$1"
     local param="$2"
     local completer="$3"
     
-    _GRIM_COMMAND_COMPLETERS["${func}:${param}"]="$completer"
+    # Convert param name to flag format (foo -> --foo)
+    local param_flag="--${param}"
+    
+    # Register the parameter
+    _GRIM_COMMAND_PARAMS["${func}:${param}"]=1
+    
+    # Register the completer if provided
+    if [[ -n "$completer" ]]; then
+        _GRIM_COMMAND_COMPLETERS["${func}:${param_flag}"]="$completer"
+    fi
     
     # Register completion if not already done
     if ! complete -p "$func" &>/dev/null; then

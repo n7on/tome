@@ -24,8 +24,8 @@ ms_ado_download_latest_feed_package() {
 
     [[ -z "$pkg" ]] && _grim_log_error "Package '$package' not found in feed '$feed'" && return 1
 
-    version=$(echo "$pkg" | jq -r '.versions[0].version')
-    _grim_log_info "Latest version: $version"
+    version=$(jq -r '.versions[0].version' <<< "$pkg")
+    _grim_log_info "latest version: $version"
     
     az artifacts universal download \
         --organization "https://dev.azure.com/$organization/" \
@@ -34,3 +34,9 @@ ms_ado_download_latest_feed_package() {
         --version "$version" \
         --path "$path/$package"
 }
+
+# Register parameters for completion
+_grim_command_set_complete "ms_ado_download_latest_feed_package" "package"
+_grim_command_set_complete "ms_ado_download_latest_feed_package" "path"
+_grim_command_set_complete "ms_ado_download_latest_feed_package" "feed"
+_grim_command_set_complete "ms_ado_download_latest_feed_package" "organization"

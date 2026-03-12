@@ -1,4 +1,4 @@
-for file in "$(dirname "${BASH_SOURCE[0]}")"/../../.env*; do
+for file in "$(dirname "${BASH_SOURCE[0]}")"/../.env*; do
     source "$file"
 done
 
