@@ -1,5 +1,6 @@
 # Command parameter and completion management
 declare -gA _GRIM_COMMAND_COMPLETERS
+declare -gA _GRIM_COMMAND_COMPLETER_FUNCS
 declare -gA _GRIM_COMMAND_PARAMS
 declare -gA _GRIM_COMMAND_FLAGS
 
@@ -23,7 +24,7 @@ _grim_command_requires() {
     done
     
     if [[ -n "$missing" ]]; then
-        _grim_log_error "Required commands not found: ${missing%% }"
+        grim_message_error "Required commands not found: ${missing%% }"
         return 1
     fi
 }
@@ -31,9 +32,16 @@ _grim_command_requires() {
 # Declare parameters and optional defaults for the calling function
 # Usage: _grim_command_init env=dev region=us-east-1 subscription
 #        Sets env and region with defaults, subscription without default
+#        Automatically includes output_format=table for all commands
 _grim_command_init() {
     local func="${FUNCNAME[1]}"
     local param
+    
+    # Always add default parameters
+    _GRIM_COMMAND_PARAMS["${func}:output_format"]=1
+    _GRIM_COMMAND_FLAGS["${func}:output_format"]="table"
+    _GRIM_COMMAND_PARAMS["${func}:dry_run"]=1
+    _GRIM_COMMAND_FLAGS["${func}:dry_run"]=""
     
     for param in "$@"; do
         if [[ "$param" == *"="* ]]; then
@@ -131,7 +139,7 @@ _grim_command_validate() {
     
     # Check required
     if [[ $required -eq 1 && -z "$value" ]]; then
-        _grim_log_error "Parameter --$param is required"
+        grim_message_error "Parameter --$param is required"
         return 1
     fi
     
@@ -140,34 +148,66 @@ _grim_command_validate() {
     
     # Validate regex if provided
     if [[ -n "$regex" && ! "$value" =~ $regex ]]; then
-        _grim_log_error "Parameter --$param does not match pattern: $regex, got: $value"
+        grim_message_error "Parameter --$param does not match pattern: $regex, got: $value"
         return 1
     fi
 }
 
-# Set a completer function for a specific parameter
-# Usage: _grim_command_set_complete "my_func" "foo" "my_completer_func"
-#        _grim_command_set_complete "my_func" "bar"
-_grim_command_set_complete() {
+# Register parameters for a function
+# Usage: _grim_command_set_params "my_func" "target" "ports" "output"
+_grim_command_set_params() {
     local func="$1"
-    local param="$2"
-    local completer="$3"
+    shift
     
-    # Convert param name to flag format (foo -> --foo)
-    local param_flag="--${param}"
+    # Always include default parameters for all commands
+    _GRIM_COMMAND_PARAMS["${func}:output_format"]=1
+    _GRIM_COMMAND_PARAMS["${func}:dry_run"]=1
+
+    for param in "$@"; do
+        _GRIM_COMMAND_PARAMS["${func}:${param}"]=1
+    done
+
+    # Auto-register output_format value completions
+    _GRIM_COMMAND_COMPLETERS["${func}:--output_format"]="json table csv"
     
-    # Register the parameter
-    _GRIM_COMMAND_PARAMS["${func}:${param}"]=1
-    
-    # Register the completer if provided
-    if [[ -n "$completer" ]]; then
-        _GRIM_COMMAND_COMPLETERS["${func}:${param_flag}"]="$completer"
-    fi
-    
-    # Register completion if not already done
+    # Register completion handler if not already done
     if ! complete -p "$func" &>/dev/null; then
         complete -o bashdefault -o default -o nospace -F _grim_command_dispatcher_complete "$func"
     fi
+}
+
+# Set value completions for a parameter
+# Usage: _grim_command_set_values "my_func" "output_format" "json" "table" "csv"
+#        _grim_command_set_values "my_func" "env" "dev" "staging" "prod"
+_grim_command_set_values() {
+    local func="$1"
+    local param="$2"
+    shift 2
+    
+    local values="$*"
+    local param_flag="--${param}"
+    
+    # Store values as space-separated string
+    _GRIM_COMMAND_COMPLETERS["${func}:${param_flag}"]="$values"
+}
+
+# Set a function as completer for a parameter
+# The function should output completions one per line
+# Usage: _grim_command_set_completer "my_func" "target" my_target_generator
+_grim_command_set_completer() {
+    local func="$1"
+    local param="$2"
+    local completer_func="$3"
+    local param_flag="--${param}"
+
+    _GRIM_COMMAND_COMPLETER_FUNCS["${func}:${param_flag}"]="$completer_func"
+}
+
+# Legacy compatibility wrapper
+_grim_command_set_complete() {
+    local func="$1"
+    shift
+    _grim_command_set_params "$func" "$@"
 }
 
 # Internal dispatcher for all completions
@@ -176,15 +216,28 @@ _grim_command_dispatcher_complete() {
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     
-    # If previous word is a flag with a custom completer, use it
-    if [[ -v _GRIM_COMMAND_COMPLETERS["${func}:${prev}"] ]]; then
-        local completer="${_GRIM_COMMAND_COMPLETERS[${func}:${prev}]}"
-        COMPREPLY=($("$completer" "$cur"))
+    # If previous word is a flag, check for function completer first, then static values
+    if [[ -v _GRIM_COMMAND_COMPLETER_FUNCS["${func}:${prev}"] ]]; then
+        local completer="${_GRIM_COMMAND_COMPLETER_FUNCS[${func}:${prev}]}"
+        local values
+        values=$("$completer" "$cur")
+        COMPREPLY=($(compgen -W "$values" -- "$cur"))
+    elif [[ -v _GRIM_COMMAND_COMPLETERS["${func}:${prev}"] ]]; then
+        local values="${_GRIM_COMMAND_COMPLETERS[${func}:${prev}]}"
+        COMPREPLY=($(compgen -W "$values" -- "$cur"))
     else
-        # Otherwise suggest available parameters as flags
+        # Collect flags already used on the command line
+        local -A used_flags
+        for word in "${COMP_WORDS[@]}"; do
+            [[ "$word" == --* ]] && used_flags["$word"]=1
+        done
+
+        # Suggest available parameters as flags, excluding already used ones
         local flags=""
         for key in "${!_GRIM_COMMAND_PARAMS[@]}"; do
-            [[ "$key" == "${func}:"* ]] && flags+=" --${key##*:}"
+            [[ "$key" == "${func}:"* ]] || continue
+            local flag="--${key##*:}"
+            [[ -v used_flags["$flag"] ]] || flags+=" $flag"
         done
         COMPREPLY=($(compgen -W "$flags" -- "$cur"))
     fi

@@ -1,7 +1,7 @@
 
-_ms_ado_app_id="499b84ac-1321-427f-aa17-267ca6975798"
+_azure_ado_app_id="499b84ac-1321-427f-aa17-267ca6975798"
 
-ms_ado_download_latest_feed_package() {
+azure_ado_download_latest_feed_package() {
     _grim_command_requires jq az || return 1
     
     _grim_command_init \
@@ -17,16 +17,13 @@ ms_ado_download_latest_feed_package() {
     local pkg
     local version
 
-    _grim_log_info "downloading artifacts from feed: $feed..."
-
     pkg=$(az rest --method GET --resource "$_ms_ado_app_id" --url "$url" 2>/dev/null | \
         jq -r --arg name "$package" '.value[] | select(.name == $name)')
 
-    [[ -z "$pkg" ]] && _grim_log_error "Package '$package' not found in feed '$feed'" && return 1
+    [[ -z "$pkg" ]] && grim_message_error "Package '$package' not found in feed '$feed'" && return 1
 
     version=$(jq -r '.versions[0].version' <<< "$pkg")
-    _grim_log_info "latest version: $version"
-    
+
     az artifacts universal download \
         --organization "https://dev.azure.com/$organization/" \
         --feed "$feed" \
@@ -35,8 +32,5 @@ ms_ado_download_latest_feed_package() {
         --path "$path/$package"
 }
 
-# Register parameters for completion
-_grim_command_set_complete "ms_ado_download_latest_feed_package" "package"
-_grim_command_set_complete "ms_ado_download_latest_feed_package" "path"
-_grim_command_set_complete "ms_ado_download_latest_feed_package" "feed"
-_grim_command_set_complete "ms_ado_download_latest_feed_package" "organization"
+# Register parameters
+_grim_command_set_params "azure_ado_download_latest_feed_package" "package" "path" "feed" "organization"
