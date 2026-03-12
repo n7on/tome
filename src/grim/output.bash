@@ -1,5 +1,5 @@
 # Output formatting for command results
-# Supports: table, json, csv
+# Supports: table, json, csv, raw
 
 declare -g _GRIM_OUTPUT_HEADERS=""
 declare -g _GRIM_OUTPUT_AWK=""
@@ -59,6 +59,9 @@ _grim_command_output_render() {
     data=$(echo "$input" | awk "$awk_pattern" 2>/dev/null)
     
     case "$format" in
+        raw)
+            echo "$input"
+            ;;
         json)
             _grim_command_output_json "$headers" "$data"
             ;;

@@ -41,7 +41,7 @@ _grim_command_init() {
     _GRIM_COMMAND_PARAMS["${func}:output_format"]=1
     _GRIM_COMMAND_FLAGS["${func}:output_format"]="table"
     _GRIM_COMMAND_PARAMS["${func}:dry_run"]=1
-    _GRIM_COMMAND_FLAGS["${func}:dry_run"]=""
+    _GRIM_COMMAND_FLAGS["${func}:dry_run"]="false"
     
     for param in "$@"; do
         if [[ "$param" == *"="* ]]; then
@@ -51,8 +51,9 @@ _grim_command_init() {
             _GRIM_COMMAND_PARAMS["${func}:${name}"]=1
             _GRIM_COMMAND_FLAGS["${func}:${name}"]="$default"
         else
-            # No default
+            # No default - reset any stale value
             _GRIM_COMMAND_PARAMS["${func}:${param}"]=1
+            _GRIM_COMMAND_FLAGS["${func}:${param}"]=""
         fi
     done
 }
@@ -86,7 +87,7 @@ _grim_command_parse() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --*=*) flags["${1%%=*}"]="${1#*=}" ;;
-            --*) flags["$1"]="${2:-true}"; shift ;;
+            --*) flags["$1"]="${2:-}"; shift ;;
             *) args+=("$1") ;;
         esac
         shift
@@ -120,12 +121,15 @@ _grim_command_validate() {
     local regex=""
     local default=""
     
+    local path_type=""
+
     # Parse validation rules
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --required) required=1 ;;
             --regex) regex="$2"; shift ;;
             --default) default="$2"; shift ;;
+            --path) path_type="${2:-file}"; shift ;;
         esac
         shift
     done
@@ -151,6 +155,22 @@ _grim_command_validate() {
         grim_message_error "Parameter --$param does not match pattern: $regex, got: $value"
         return 1
     fi
+
+    # Validate path
+    if [[ -n "$path_type" ]]; then
+        case "$path_type" in
+            file)
+                if [[ ! -f "$value" ]]; then
+                    grim_message_error "Parameter --$param: file not found: $value"
+                    return 1
+                fi ;;
+            dir)
+                if [[ ! -d "$value" ]]; then
+                    grim_message_error "Parameter --$param: directory not found: $value"
+                    return 1
+                fi ;;
+        esac
+    fi
 }
 
 # Register parameters for a function
@@ -167,8 +187,9 @@ _grim_command_set_params() {
         _GRIM_COMMAND_PARAMS["${func}:${param}"]=1
     done
 
-    # Auto-register output_format value completions
-    _GRIM_COMMAND_COMPLETERS["${func}:--output_format"]="json table csv"
+    # Auto-register value completions for default parameters
+    _GRIM_COMMAND_COMPLETERS["${func}:--output_format"]="json table csv raw"
+    _GRIM_COMMAND_COMPLETERS["${func}:--dry_run"]="true false"
     
     # Register completion handler if not already done
     if ! complete -p "$func" &>/dev/null; then
@@ -219,9 +240,8 @@ _grim_command_dispatcher_complete() {
     # If previous word is a flag, check for function completer first, then static values
     if [[ -v _GRIM_COMMAND_COMPLETER_FUNCS["${func}:${prev}"] ]]; then
         local completer="${_GRIM_COMMAND_COMPLETER_FUNCS[${func}:${prev}]}"
-        local values
-        values=$("$completer" "$cur")
-        COMPREPLY=($(compgen -W "$values" -- "$cur"))
+        local IFS=$'\n'
+        COMPREPLY=($("$completer" "$cur"))
     elif [[ -v _GRIM_COMMAND_COMPLETERS["${func}:${prev}"] ]]; then
         local values="${_GRIM_COMMAND_COMPLETERS[${func}:${prev}]}"
         COMPREPLY=($(compgen -W "$values" -- "$cur"))
