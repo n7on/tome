@@ -22,7 +22,7 @@ _complete_openssl_messages() {
     echo '"QUIT"'
     echo '"STARTTLS"'
     echo '"EHLO test"'
-    echo '"GET / HTTP/1.1\r\nHost: \r\n"'
+    echo '"GET / HTTP/1.1\r\n"'
 }
 _grim_command_set_completer "openssl_client_connect" "message" _complete_openssl_messages
 
