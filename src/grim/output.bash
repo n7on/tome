@@ -2,12 +2,20 @@
 # Supports: table, json, csv, raw
 
 declare -g _GRIM_OUTPUT_HEADERS=""
-declare -g _GRIM_OUTPUT_AWK=""
+declare -g _GRIM_OUTPUT_EXTRACTOR=""
+declare -g _GRIM_OUTPUT_TYPE="awk"
 
 # Run a command, piping stdout through while capturing stderr
 # On failure, stderr is logged via grim_message_error
 # Usage: _grim_command_run "${cmd[@]}" | _grim_command_output_render
+#        _grim_command_run --error "Something went wrong" "${cmd[@]}"
 _grim_command_run() {
+    local custom_error=""
+    if [[ "$1" == "--error" ]]; then
+        custom_error="$2"
+        shift 2
+    fi
+
     if [[ "${dry_run:-}" == "true" ]]; then
         echo "$*"
         return 0
@@ -20,20 +28,26 @@ _grim_command_run() {
     local rc=$?
 
     if [[ $rc -ne 0 ]]; then
-        local err
-        err=$(<"$stderr_file")
-        [[ -n "$err" ]] && grim_message_error "$err"
+        if [[ -n "$custom_error" ]]; then
+            grim_message_error "$custom_error"
+        else
+            local err
+            err=$(grep -m1 . "$stderr_file")
+            [[ -n "$err" ]] && grim_message_error "$err"
+        fi
     fi
 
     rm -f "$stderr_file"
     return $rc
 }
 
-# Set output headers and awk pattern for extraction
+# Set output headers and extractor for rendering
 # Usage: _grim_command_output_set "IP,PORT,STATE,SERVICE" '{print $2, $1, $3, $4}'
+#        _grim_command_output_set "name,ip" '.[].name + "\t" + .[].ip' jq
 _grim_command_output_set() {
     _GRIM_OUTPUT_HEADERS="$1"
-    _GRIM_OUTPUT_AWK="$2"
+    _GRIM_OUTPUT_EXTRACTOR="$2"
+    _GRIM_OUTPUT_TYPE="${3:-awk}"
 }
 
 # Format and output data based on selected format
@@ -42,8 +56,9 @@ _grim_command_output_set() {
 _grim_command_output_render() {
     local format="${output_format:-table}"
     local headers="$_GRIM_OUTPUT_HEADERS"
-    local awk_pattern="$_GRIM_OUTPUT_AWK"
-    
+    local extractor="$_GRIM_OUTPUT_EXTRACTOR"
+    local type="$_GRIM_OUTPUT_TYPE"
+
     # Read input
     local input
     input=$(cat)
@@ -53,10 +68,21 @@ _grim_command_output_render() {
         echo "$input"
         return 0
     fi
-    
-    # Extract data using awk
+
+    # Extract data using the configured extractor
     local data
-    data=$(echo "$input" | awk "$awk_pattern" 2>/dev/null)
+    case "$type" in
+        jq)
+            _grim_command_requires jq || {
+                grim_message_error "jq required for jq extractor"
+                return 1
+            }
+            data=$(echo "$input" | jq -r "$extractor" 2>/dev/null)
+            ;;
+        awk|*)
+            data=$(echo "$input" | awk "$extractor" 2>/dev/null)
+            ;;
+    esac
     
     case "$format" in
         raw)

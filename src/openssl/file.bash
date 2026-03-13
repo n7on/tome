@@ -1,6 +1,6 @@
 # Encrypt a file using AES-256-CBC
-# Usage: openssl_encrypt_file --input secret.txt --output secret.enc --password mypass
-openssl_encrypt_file() {
+# Usage: openssl_file_encrypt --input secret.txt --output secret.enc --password mypass
+openssl_file_encrypt() {
     _grim_command_requires openssl || return 1
 
     _grim_command_init input output password cipher=aes-256-cbc
@@ -17,8 +17,8 @@ openssl_encrypt_file() {
 }
 
 # Decrypt a file using AES-256-CBC
-# Usage: openssl_encrypt_decrypt --input secret.enc --output secret.txt --password mypass
-openssl_encrypt_decrypt() {
+# Usage: openssl_file_decrypt --input secret.enc --output secret.txt --password mypass
+openssl_file_decrypt() {
     _grim_command_requires openssl || return 1
 
     _grim_command_init input output password cipher=aes-256-cbc
@@ -31,13 +31,13 @@ openssl_encrypt_decrypt() {
 
     local cmd=(openssl enc -d -"${cipher}" -pbkdf2 -in "$input" -out "$output" -pass "pass:${password}")
 
-    _grim_command_run "${cmd[@]}"
+    _grim_command_run --error "Decryption failed: wrong password or corrupted file" "${cmd[@]}"
 }
 
-_grim_command_set_params "openssl_encrypt_file" "input" "output" "password" "cipher"
-_grim_command_set_params "openssl_encrypt_decrypt" "input" "output" "password" "cipher"
+_grim_command_set_params "openssl_file_encrypt" "input" "output" "password" "cipher"
+_grim_command_set_params "openssl_file_decrypt" "input" "output" "password" "cipher"
 
-_grim_command_set_values "openssl_encrypt_file" "cipher" \
-    "aes-256-cbc" "aes-128-cbc" "aes-256-gcm" "chacha20-poly1305"
-_grim_command_set_values "openssl_encrypt_decrypt" "cipher" \
-    "aes-256-cbc" "aes-128-cbc" "aes-256-gcm" "chacha20-poly1305"
+_grim_command_set_values "openssl_file_encrypt" "cipher" \
+    "aes-256-cbc" "aes-128-cbc"
+_grim_command_set_values "openssl_file_decrypt" "cipher" \
+    "aes-256-cbc" "aes-128-cbc"
