@@ -1,5 +1,5 @@
 # Output formatting for command results
-# Supports: table, json, csv, raw
+# Supports: table, json, tsv, raw
 
 declare -g _GRIM_OUTPUT_HEADERS=""
 declare -g _GRIM_OUTPUT_EXTRACTOR=""
@@ -29,8 +29,8 @@ _grim_command_output_render() {
     local type="$_GRIM_OUTPUT_TYPE"
 
     case "$format" in
-        raw|json|csv|table) ;;
-        *) _grim_message_error "Invalid output format: $format (expected: raw, json, csv, table)"; return 1 ;;
+        raw|json|tsv|table) ;;
+        *) _grim_message_error "Invalid output format: $format (expected: raw, json, tsv, table)"; return 1 ;;
     esac
 
     # Read input
@@ -59,8 +59,8 @@ _grim_command_output_render() {
         json)
             _grim_command_output_json "$headers" "$data"
             ;;
-        csv)
-            _grim_command_output_csv "$headers" "$data"
+        tsv)
+            _grim_command_output_tsv "$headers" "$data"
             ;;
         table)
             _grim_command_output_table "$headers" "$data"
@@ -117,24 +117,13 @@ _grim_command_output_json() {
     echo "$json" | jq .
 }
 
-# Output as CSV
-_grim_command_output_csv() {
+# Output as TSV
+_grim_command_output_tsv() {
     local headers="$1"
     local data="$2"
-    
-    # Print headers
-    echo "$headers"
-    
-    # Print data rows
-    while IFS= read -r line; do
-        [[ -z "$line" ]] && continue
-        if [[ "$line" == *$'\t'* ]]; then
-            # Tab-delimited: replace tabs with commas
-            echo "${line//$'\t'/,}"
-        else
-            echo "$line" | awk '{for(i=1;i<=NF;i++) printf "%s%s", $i, (i<NF?",":"\n")}'
-        fi
-    done <<< "$data"
+
+    echo "${headers//,/$'\t'}"
+    echo "$data"
 }
 
 # Output as formatted table

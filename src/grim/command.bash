@@ -266,7 +266,7 @@ _grim_command_complete_params() {
     # Default parameters for all commands
     _GRIM_COMMAND_PARAMS["${func}:output_format"]=1
     _GRIM_COMMAND_FLAGS["${func}:output_format"]="table"
-    _GRIM_COMMAND_COMPLETERS["${func}:--output_format"]="json table csv raw"
+    _GRIM_COMMAND_COMPLETERS["${func}:--output_format"]="json table tsv raw"
     _GRIM_COMMAND_PARAMS["${func}:help"]=1
 
     for param in "$@"; do
