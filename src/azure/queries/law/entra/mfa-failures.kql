@@ -1,0 +1,6 @@
+SigninLogs
+| where AuthenticationRequirement == "multiFactorAuthentication"
+| where ResultType != 0
+| summarize Failures = count() by UserPrincipalName, AppDisplayName, ResultDescription
+| order by Failures desc
+| project UserPrincipalName, AppDisplayName, ResultDescription, Failures

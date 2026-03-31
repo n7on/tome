@@ -1,0 +1,4 @@
+AppServiceHTTPLogs
+| where ScStatus >= 500
+| order by TimeGenerated desc
+| project TimeGenerated, CsHost, CsUriStem, ScStatus, TimeTaken

@@ -41,6 +41,25 @@ _grim_command_requires() {
     fi
 }
 
+# Check that required az extensions are installed, installing any that are missing
+# Usage: _grim_command_requires_az_extension log-analytics resource-graph
+_grim_command_requires_az_extension() {
+    if [[ $# -eq 0 ]]; then
+        _grim_message_error "_grim_command_requires_az_extension: no extensions specified"
+        return 1
+    fi
+
+    for ext in "$@"; do
+        if ! az extension show --name "$ext" &>/dev/null; then
+            _grim_message_warn "Installing required az extension: $ext"
+            az extension add --name "$ext" --only-show-errors || {
+                _grim_message_error "Failed to install az extension: $ext"
+                return 1
+            }
+        fi
+    done
+}
+
 # Run a command array, piping stdout to output_render and capturing stderr as warnings
 # Usage: local cmd=(nmap -T4 -p- "$target")
 #        _grim_command_run "${cmd[@]}"

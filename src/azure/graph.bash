@@ -3,13 +3,17 @@ _azure_graph_queries_dir="$(dirname "${BASH_SOURCE[0]}")/queries/graph"
 _azure_graph_user_queries_dir="$HOME/.grim/queries/azure/graph"
 
 _azure_graph_get_query_names() {
+    local -A seen
     local names=()
-    local dir file
+    local dir file name
 
-    for dir in "$_azure_graph_queries_dir" "$_azure_graph_user_queries_dir"; do
+    for dir in "$_azure_graph_user_queries_dir" "$_azure_graph_queries_dir"; do
         [[ -d "$dir" ]] || continue
         while IFS= read -r file; do
-            names+=("${file%.kql}")
+            name="${file%.kql}"
+            [[ -n "${seen[$name]}" ]] && continue
+            seen[$name]=1
+            names+=("$name")
         done < <(find "$dir" -name "*.kql" -printf "%P\n" 2>/dev/null)
     done
 
