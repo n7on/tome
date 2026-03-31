@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.network/privateendpoints"
+| project name, resourceGroup, location, kind, subscriptionId

@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.web/sites"
+| project name, resourceGroup, location, kind, subscriptionId

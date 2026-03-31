@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.storage/storageaccounts"
+| project name, resourceGroup, location, kind, subscriptionId

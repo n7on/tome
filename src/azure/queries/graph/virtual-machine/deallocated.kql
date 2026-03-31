@@ -1,0 +1,5 @@
+Resources
+| where type == "microsoft.compute/virtualmachines"
+| where properties.extended.instanceView.powerState.displayStatus == "VM deallocated"
+| where isnull(tags.ArchivedUntil) or todatetime(tostring(tags.ArchivedUntil)) <= now()
+| project name, resourceGroup, location, kind, subscriptionId

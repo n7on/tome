@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.sql/servers"
+| project name, resourceGroup, location, kind, subscriptionId

@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.web/serverfarms"
+| project name, resourceGroup, location, kind, subscriptionId

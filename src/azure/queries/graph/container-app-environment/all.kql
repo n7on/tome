@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.app/managedenvironments"
+| project name, resourceGroup, location, kind, subscriptionId

@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.keyvault/vaults"
+| project name, resourceGroup, location, kind, subscriptionId

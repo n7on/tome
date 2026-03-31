@@ -1,0 +1,5 @@
+Resources
+| where type == "microsoft.web/serverfarms"
+| where properties.numberOfSites < 1
+| where isnull(tags.ArchivedUntil) or todatetime(tostring(tags.ArchivedUntil)) <= now()
+| project name, resourceGroup, location, kind, subscriptionId

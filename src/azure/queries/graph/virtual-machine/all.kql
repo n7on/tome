@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.compute/virtualmachines"
+| project name, resourceGroup, location, kind, subscriptionId

@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.documentdb/databaseaccounts"
+| project name, resourceGroup, location, kind, subscriptionId

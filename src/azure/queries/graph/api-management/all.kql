@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.apimanagement/service"
+| project name, resourceGroup, location, kind, subscriptionId

@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.cache/redis"
+| project name, resourceGroup, location, kind, subscriptionId

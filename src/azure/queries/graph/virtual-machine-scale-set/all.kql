@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.compute/virtualmachinescalesets"
+| project name, resourceGroup, location, kind, subscriptionId

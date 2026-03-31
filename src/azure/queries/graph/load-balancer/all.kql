@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.network/loadbalancers"
+| project name, resourceGroup, location, kind, subscriptionId

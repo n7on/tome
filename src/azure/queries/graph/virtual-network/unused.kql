@@ -1,0 +1,5 @@
+Resources
+| where type == "microsoft.network/virtualnetworks"
+| where array_length(properties.subnets) == 0
+| where isnull(tags.ArchivedUntil) or todatetime(tostring(tags.ArchivedUntil)) <= now()
+| project name, resourceGroup, location, kind, subscriptionId

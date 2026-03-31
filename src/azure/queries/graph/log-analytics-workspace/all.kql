@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.operationalinsights/workspaces"
+| project name, resourceGroup, location, kind, subscriptionId

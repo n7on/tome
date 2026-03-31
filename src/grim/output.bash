@@ -52,6 +52,11 @@ _grim_command_output_render() {
             ;;
     esac
     
+    if [[ -z "$data" ]]; then
+        _grim_message_warn "No results found"
+        return 0
+    fi
+
     case "$format" in
         raw)
             echo "$input"
@@ -88,12 +93,10 @@ _grim_command_output_json() {
     while IFS= read -r line; do
         [[ -z "$line" ]] && continue
         
-        # Split line into fields (tab-delimited if tabs present, else spaces)
-        if [[ "$line" == *$'\t'* ]]; then
-            IFS=$'\t' read -ra fields <<< "$line"
-        else
-            read -ra fields <<< "$line"
-        fi
+        # Split line into fields — replace tab with \x1f (non-whitespace IFS char)
+        # so that consecutive empty fields and leading empty fields are preserved.
+        # Tab is a whitespace IFS char in bash, causing consecutive tabs to collapse.
+        IFS=$'\x1f' read -ra fields <<< "${line//$'\t'/$'\x1f'}"
         
         $first_row || json+=","
         first_row=false

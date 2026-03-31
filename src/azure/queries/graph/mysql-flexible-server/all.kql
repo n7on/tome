@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.dbformysql/flexibleservers"
+| project name, resourceGroup, location, kind, subscriptionId

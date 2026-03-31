@@ -1,0 +1,4 @@
+Resources
+| where type == "microsoft.web/sites"
+| where kind contains "functionapp"
+| project name, resourceGroup, location, kind, subscriptionId

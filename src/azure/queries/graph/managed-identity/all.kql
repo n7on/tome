@@ -1,0 +1,3 @@
+Resources
+| where type == "microsoft.managedidentity/userassignedidentities"
+| project name, resourceGroup, location, kind, subscriptionId
