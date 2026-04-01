@@ -8,10 +8,15 @@ _grim_cache_key() {
 }
 
 # Wrap a command with caching support
-# Reads $cache from caller scope (set by --cache parameter)
-# Usage: _grim_cache_wrap command arg1 arg2
+# Usage: _grim_cache_wrap <ttl> command arg1 arg2
+_GRIM_CACHE_DEFAULT_TTL=300
+
 _grim_cache_wrap() {
-    local cache_ttl="${cache:-0}"
+    local cache_ttl="${1:-0}"
+    shift
+
+    # --cache without a value is parsed as "true"; use default TTL
+    [[ "$cache_ttl" == "true" ]] && cache_ttl="$_GRIM_CACHE_DEFAULT_TTL"
 
     if [[ "$cache_ttl" -le 0 ]]; then
         "$@"
@@ -25,20 +30,28 @@ _grim_cache_wrap() {
     mkdir -p "$_GRIM_CACHE_DIR"
 
     if [[ -f "$cache_file" ]]; then
-        local age=$(( $(date +%s) - $(stat -f%m "$cache_file") ))
+        local mtime
+        if stat --version &>/dev/null; then
+            mtime=$(stat -c %Y "$cache_file")
+        else
+            mtime=$(stat -f%m "$cache_file")
+        fi
+        local age=$(( $(date +%s) - mtime ))
         if (( age < cache_ttl )); then
             cat "$cache_file"
             return 0
         fi
     fi
 
-    local output
-    output=$("$@") || { echo "$output"; return 1; }
+    local output rc
+    output=$("$@")
+    rc=$?
 
     if [[ -n "$output" ]]; then
         echo "$output" > "$cache_file"
     fi
     echo "$output"
+    return "$rc"
 }
 
 # Clear all cached data

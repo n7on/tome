@@ -118,7 +118,7 @@ _grim_command_run() {
     local stderr_file
     stderr_file=$(mktemp)
 
-    _grim_cache_wrap "$@" 2>"$stderr_file" | _grim_command_output_render
+    _grim_cache_wrap "${cache:-0}" "$@" 2>"$stderr_file" | _grim_command_output_render
 
     local rc=${PIPESTATUS[0]}
 
@@ -158,7 +158,7 @@ _grim_command_exec_python() {
     local stderr_file
     stderr_file=$(mktemp)
 
-    _grim_cache_wrap "$_GRIM_PYTHON" "$script_path" "$@" 2>"$stderr_file"
+    _grim_cache_wrap "${cache:-0}" "$_GRIM_PYTHON" "$script_path" "$@" 2>"$stderr_file"
 
     local rc=$?
 
@@ -183,7 +183,7 @@ _grim_command_exec() {
     local stderr_file
     stderr_file=$(mktemp)
 
-    _grim_cache_wrap "$@" 2>"$stderr_file"
+    _grim_cache_wrap "${cache:-0}" "$@" 2>"$stderr_file"
 
     local rc=$?
 
