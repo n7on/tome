@@ -10,6 +10,52 @@ declare -gA _GRIM_COMMAND_PATH
 declare -gA _GRIM_COMMAND_HELP
 declare -gA _GRIM_COMMAND_DESCRIPTION
 
+# Get the config file path for a namespace/module
+# Usage: _grim_command_config_file azure ado
+_grim_command_config_file() {
+    echo "$HOME/.grim/$1/$2.json"
+}
+
+# Lazily initialise a module config file from its example in the repo.
+# Copies src/<namespace>/<module>.json.example to ~/.grim/<namespace>/<module>.json on first use.
+# Usage: _grim_command_config_init <namespace> <module> (called at module scope, not inside functions)
+_grim_command_config_init() {
+    local namespace="$1"
+    local module="$2"
+    local config_file
+    config_file=$(_grim_command_config_file "$namespace" "$module")
+    local example="$_GRIM_DIR/src/$namespace/$module.json.example"
+
+    if [[ ! -f "$config_file" && -f "$example" ]]; then
+        mkdir -p "$(dirname "$config_file")"
+        cp "$example" "$config_file"
+        _grim_message_warn "Created $config_file — edit it to configure $namespace/$module"
+    fi
+}
+
+# Read a key from a module config file
+# Usage: _grim_command_config_get <namespace> <module> <key>
+_grim_command_config_get() {
+    local config_file
+    config_file=$(_grim_command_config_file "$1" "$2")
+    [[ -f "$config_file" ]] || return 0
+    jq -r --arg key "$3" '.[$key] // empty' "$config_file" 2>/dev/null
+}
+
+# Write a key/value to a module config file
+# Usage: _grim_command_config_set <namespace> <module> <key> <value>
+_grim_command_config_set() {
+    local config_file
+    config_file=$(_grim_command_config_file "$1" "$2")
+    if [[ ! -f "$config_file" ]]; then
+        _grim_message_error "Config file not found: $config_file"
+        return 1
+    fi
+    local updated
+    updated=$(jq --arg key "$3" --arg val "$4" '.[$key] = $val' "$config_file") || return 1
+    echo "$updated" > "$config_file"
+}
+
 # Filter and return completion items for a given prefix
 # Usage: _grim_command_complete_filter "sub1 sub2 sub3" "s"
 _grim_command_complete_filter() {

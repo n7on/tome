@@ -1,9 +1,6 @@
 _GRIM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 _GRIM_PYTHON="$_GRIM_DIR/.venv/bin/python3"
 
-# Source user config
-[[ -f "$HOME/.grim/config.env" ]] && source "$HOME/.grim/config.env"
-
 # Source grim utilities first (dependencies)
 for _grim_file in "$_GRIM_DIR/src/_grim"/*.bash; do
     source "$_grim_file"

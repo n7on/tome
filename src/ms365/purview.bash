@@ -1,5 +1,5 @@
 
-azure_purview_slabel_list() {
+ms365_purview_slabel_list() {
     _grim_command_requires az jq || return 1
     _grim_command_description "List Purview sensitive information labels"
     _grim_command_param name   --help "Filter by name (partial match)"
@@ -26,7 +26,7 @@ azure_purview_slabel_list() {
     echo "$result" | _grim_command_output_render
 }
 
-azure_purview_slabel_show() {
+ms365_purview_slabel_show() {
     _grim_command_requires az jq || return 1
     _grim_command_description "Show details of a Purview sensitive information label"
     _grim_command_param name --required --positional --help "Label name (exact match)"
@@ -47,7 +47,7 @@ azure_purview_slabel_show() {
     echo "$label" | _grim_command_output_render
 }
 
-azure_purview_slabel_add() {
+ms365_purview_slabel_add() {
     _grim_command_requires az jq || return 1
     _grim_command_description "Create a new Purview sensitive information label"
     _grim_command_param name        --required --positional --help "Label display name"
@@ -92,7 +92,7 @@ azure_purview_slabel_add() {
     echo "$result" | _grim_command_output_render
 }
 
-azure_purview_rlabel_list() {
+ms365_purview_rlabel_list() {
     _grim_command_requires az jq || return 1
     _grim_command_description "List Purview retention labels"
     _grim_command_param name    --help "Filter by display name (partial match)"
@@ -119,7 +119,7 @@ azure_purview_rlabel_list() {
     echo "$result" | _grim_command_output_render
 }
 
-azure_purview_rlabel_show() {
+ms365_purview_rlabel_show() {
     _grim_command_requires az jq || return 1
     _grim_command_description "Show details of a Purview retention label"
     _grim_command_param name --required --positional --help "Label display name (exact match)"
@@ -140,7 +140,7 @@ azure_purview_rlabel_show() {
     echo "$label" | _grim_command_output_render
 }
 
-azure_purview_rlabel_add() {
+ms365_purview_rlabel_add() {
     _grim_command_requires az jq || return 1
     _grim_command_description "Create a new Purview retention label"
     _grim_command_param name               --required --positional --help "Label display name"
@@ -184,16 +184,16 @@ azure_purview_rlabel_add() {
 }
 
 # Register completions
-_grim_command_complete_params "azure_purview_slabel_list" "name" "parent" "scope" "active"
-_grim_command_complete_values "azure_purview_slabel_list" "scope" "file" "email" "site" "unifiedGroup"
-_grim_command_complete_values "azure_purview_slabel_list" "active" "true" "false"
-_grim_command_complete_params "azure_purview_slabel_show" "name"
-_grim_command_complete_params "azure_purview_slabel_add" "name" "description" "tooltip" "color" "parent"
-_grim_command_complete_params "azure_purview_rlabel_list" "name" "trigger" "action" "in_use"
-_grim_command_complete_values "azure_purview_rlabel_list" "trigger" "dateLabeled" "dateCreated" "dateModified" "dateOfEvent"
-_grim_command_complete_values "azure_purview_rlabel_list" "action" "none" "delete" "permanentlyDelete" "startDispositionReview"
-_grim_command_complete_values "azure_purview_rlabel_list" "in_use" "true" "false"
-_grim_command_complete_params "azure_purview_rlabel_show" "name"
-_grim_command_complete_params "azure_purview_rlabel_add" "name" "duration" "trigger" "action" "description_admins" "description_users"
-_grim_command_complete_values "azure_purview_rlabel_add" "trigger" "dateLabeled" "dateCreated" "dateModified" "dateOfEvent"
-_grim_command_complete_values "azure_purview_rlabel_add" "action" "none" "delete" "permanentlyDelete" "startDispositionReview"
+_grim_command_complete_params "ms365_purview_slabel_list" "name" "parent" "scope" "active"
+_grim_command_complete_values "ms365_purview_slabel_list" "scope" "file" "email" "site" "unifiedGroup"
+_grim_command_complete_values "ms365_purview_slabel_list" "active" "true" "false"
+_grim_command_complete_params "ms365_purview_slabel_show" "name"
+_grim_command_complete_params "ms365_purview_slabel_add" "name" "description" "tooltip" "color" "parent"
+_grim_command_complete_params "ms365_purview_rlabel_list" "name" "trigger" "action" "in_use"
+_grim_command_complete_values "ms365_purview_rlabel_list" "trigger" "dateLabeled" "dateCreated" "dateModified" "dateOfEvent"
+_grim_command_complete_values "ms365_purview_rlabel_list" "action" "none" "delete" "permanentlyDelete" "startDispositionReview"
+_grim_command_complete_values "ms365_purview_rlabel_list" "in_use" "true" "false"
+_grim_command_complete_params "ms365_purview_rlabel_show" "name"
+_grim_command_complete_params "ms365_purview_rlabel_add" "name" "duration" "trigger" "action" "description_admins" "description_users"
+_grim_command_complete_values "ms365_purview_rlabel_add" "trigger" "dateLabeled" "dateCreated" "dateModified" "dateOfEvent"
+_grim_command_complete_values "ms365_purview_rlabel_add" "action" "none" "delete" "permanentlyDelete" "startDispositionReview"

@@ -22,13 +22,6 @@ if [[ ! -d "$_GRIM_USER_DIR" ]]; then
     mkdir -p "$_GRIM_USER_DIR"
 fi
 
-# Copy config.env.example to ~/.grim/config.env if not already there
-if [[ ! -f "$_GRIM_USER_DIR/config.env" ]]; then
-    echo "Creating $_GRIM_USER_DIR/config.env from example..."
-    cp "$_GRIM_DIR/config.env.example" "$_GRIM_USER_DIR/config.env"
-    echo "Edit $_GRIM_USER_DIR/config.env to configure grim."
-fi
-
 # Create/update virtualenv and install Python dependencies
 echo "Installing Python dependencies..."
 python3 -m venv "$_GRIM_DIR/.venv"

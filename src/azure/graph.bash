@@ -65,3 +65,4 @@ azure_graph_query() {
 # Register completions
 _grim_command_complete_params "azure_graph_query" "name" "subscriptions"
 _grim_command_complete_func "azure_graph_query" "name" _azure_graph_get_query_names
+_grim_command_complete_func "azure_graph_query" "subscriptions" _azure_account_get_subscriptions
