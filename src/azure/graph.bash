@@ -56,10 +56,9 @@ azure_graph_query() {
     local result
     result=$(_grim_command_exec "${cmd[@]}") || { _grim_message_error "Graph query failed"; return 1; }
 
-    _grim_command_output_set "NAME,RESOURCE_GROUP,LOCATION,KIND,SUBSCRIPTION_ID" \
-        '.data[] | [.name, .resourceGroup, .location, (.kind // "-"), .subscriptionId] | @tsv' jq
-
-    echo "$result" | _grim_command_output_render
+    echo "$result" \
+        | jq -r '.data[] | [.name, .resourceGroup, .location, (.kind // "-"), .subscriptionId] | @tsv' \
+        | _grim_command_output_render "NAME,RESOURCE_GROUP,LOCATION,KIND,SUBSCRIPTION_ID"
 }
 
 # Register completions

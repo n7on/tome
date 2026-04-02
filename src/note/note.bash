@@ -73,10 +73,8 @@ note_list() {
         return 0
     fi
 
-    _grim_command_output_set "ID,TIMESTAMP,MESSAGE" \
-        '.[] | [.id, .timestamp, .message] | @tsv' jq
-
-    cat "$file" | _grim_command_output_render
+    jq -r '.[] | [.id, .timestamp, .message] | @tsv' "$file" \
+        | _grim_command_output_render "ID,TIMESTAMP,MESSAGE"
 }
 
 # Delete a note by id

@@ -1,4 +1,4 @@
-_GRIM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_GRIM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _GRIM_PYTHON="$_GRIM_DIR/.venv/bin/python3"
 
 # Source grim utilities first (dependencies)

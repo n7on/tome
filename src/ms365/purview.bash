@@ -1,6 +1,6 @@
 
 ms365_purview_slabel_list() {
-    _grim_command_requires az jq || return 1
+    _grim_command_requires jq || return 1
     _grim_command_description "List Purview sensitive information labels"
     _grim_command_param name   --help "Filter by name (partial match)"
     _grim_command_param parent --help "Filter to sublabels of the given parent label name"
@@ -9,9 +9,7 @@ ms365_purview_slabel_list() {
     _grim_command_param_parse "$@" || return 1
 
     local result
-    result=$(az rest --method GET \
-        --url "https://graph.microsoft.com/v1.0/security/informationProtection/sensitivityLabels" \
-        2>/dev/null) || { _grim_message_error "Failed to fetch sensitivity labels"; return 1; }
+    result=$(_ms365_graph_get "https://graph.microsoft.com/beta/security/informationProtection/sensitivityLabels") || return 1
 
     result=$(jq -r '.value' <<< "$result")
 
@@ -20,35 +18,31 @@ ms365_purview_slabel_list() {
     [[ -n "$scope" ]]  && result=$(jq --arg v "$scope"  '[.[] | select(.contentFormats[]? | ascii_downcase == ($v | ascii_downcase))]' <<< "$result")
     [[ -n "$active" ]] && result=$(jq --argjson v "$active" '[.[] | select(.isActive == $v)]' <<< "$result")
 
-    _grim_command_output_set "NAME,PARENT,ACTIVE,SCOPE,ID" \
-        '.[] | [.name, (.parent.name? // "-"), (.isActive | tostring), ([.contentFormats[]?] | join(",")), .id] | @tsv' jq
-
-    echo "$result" | _grim_command_output_render
+    echo "$result" \
+        | jq -r '.[] | [.name, (.parent.name? // "-"), (.isActive | tostring), ([.contentFormats[]?] | join(",")), .id] | @tsv' \
+        | _grim_command_output_render "NAME,PARENT,ACTIVE,SCOPE,ID"
 }
 
 ms365_purview_slabel_show() {
-    _grim_command_requires az jq || return 1
+    _grim_command_requires jq || return 1
     _grim_command_description "Show details of a Purview sensitive information label"
     _grim_command_param name --required --positional --help "Label name (exact match)"
     _grim_command_param_parse "$@" || return 1
 
     local result
-    result=$(az rest --method GET \
-        --url "https://graph.microsoft.com/v1.0/security/informationProtection/sensitivityLabels" \
-        2>/dev/null) || { _grim_message_error "Failed to fetch sensitivity labels"; return 1; }
+    result=$(_ms365_graph_get "https://graph.microsoft.com/beta/security/informationProtection/sensitivityLabels") || return 1
 
     local label
     label=$(jq --arg v "$name" '.value[] | select(.name | ascii_downcase == ($v | ascii_downcase))' <<< "$result")
     [[ -z "$label" ]] && { _grim_message_error "Label '$name' not found"; return 1; }
 
-    _grim_command_output_set "FIELD,VALUE" \
-        'to_entries[] | [.key, (.value | if type == "array" then join(", ") elif type == "object" then tojson else tostring end)] | @tsv' jq
-
-    echo "$label" | _grim_command_output_render
+    echo "$label" \
+        | jq -r 'to_entries[] | [.key, (.value | if type == "array" then join(", ") elif type == "object" then tojson else tostring end)] | @tsv' \
+        | _grim_command_output_render "FIELD,VALUE"
 }
 
 ms365_purview_slabel_add() {
-    _grim_command_requires az jq || return 1
+    _grim_command_requires jq || return 1
     _grim_command_description "Create a new Purview sensitive information label"
     _grim_command_param name        --required --positional --help "Label display name"
     _grim_command_param description --help "Label description"
@@ -72,28 +66,24 @@ ms365_purview_slabel_add() {
 
     if [[ -n "$parent" ]]; then
         local labels parent_id
-        labels=$(az rest --method GET \
-            --url "https://graph.microsoft.com/v1.0/security/informationProtection/sensitivityLabels" \
-            2>/dev/null) || { _grim_message_error "Failed to fetch labels for parent lookup"; return 1; }
+        labels=$(_ms365_graph_get "https://graph.microsoft.com/beta/security/informationProtection/sensitivityLabels") || return 1
         parent_id=$(jq -r --arg v "$parent" '.value[] | select(.name | ascii_downcase == ($v | ascii_downcase)) | .id' <<< "$labels")
         [[ -z "$parent_id" ]] && { _grim_message_error "Parent label '$parent' not found"; return 1; }
         body=$(jq --arg pid "$parent_id" '.parentId = $pid' <<< "$body")
     fi
 
     local result
-    result=$(az rest --method POST \
-        --url "https://graph.microsoft.com/v1.0/security/informationProtection/sensitivityLabels" \
-        --body "$body" \
-        2>/dev/null) || { _grim_message_error "Failed to create label '$name'"; return 1; }
+    result=$(_ms365_graph_post \
+        "https://graph.microsoft.com/beta/security/informationProtection/sensitivityLabels" \
+        "$body") || return 1
 
-    _grim_command_output_set "FIELD,VALUE" \
-        'to_entries[] | [.key, (.value | if type == "array" then join(", ") elif type == "object" then tojson else tostring end)] | @tsv' jq
-
-    echo "$result" | _grim_command_output_render
+    echo "$result" \
+        | jq -r 'to_entries[] | [.key, (.value | if type == "array" then join(", ") elif type == "object" then tojson else tostring end)] | @tsv' \
+        | _grim_command_output_render "FIELD,VALUE"
 }
 
 ms365_purview_rlabel_list() {
-    _grim_command_requires az jq || return 1
+    _grim_command_requires jq || return 1
     _grim_command_description "List Purview retention labels"
     _grim_command_param name    --help "Filter by display name (partial match)"
     _grim_command_param trigger --help "Filter by retention trigger (dateLabeled, dateCreated, dateModified, dateOfEvent)"
@@ -102,9 +92,7 @@ ms365_purview_rlabel_list() {
     _grim_command_param_parse "$@" || return 1
 
     local result
-    result=$(az rest --method GET \
-        --url "https://graph.microsoft.com/v1.0/security/labels/retentionLabels" \
-        2>/dev/null) || { _grim_message_error "Failed to fetch retention labels"; return 1; }
+    result=$(_ms365_graph_get "https://graph.microsoft.com/v1.0/security/labels/retentionLabels") || return 1
 
     result=$(jq '.value' <<< "$result")
 
@@ -113,35 +101,31 @@ ms365_purview_rlabel_list() {
     [[ -n "$action" ]]  && result=$(jq --arg v "$action"  '[.[] | select(.actionAfterRetentionPeriod | ascii_downcase == ($v | ascii_downcase))]' <<< "$result")
     [[ -n "$in_use" ]]  && result=$(jq --argjson v "$in_use" '[.[] | select(.isInUse == $v)]' <<< "$result")
 
-    _grim_command_output_set "NAME,DURATION_DAYS,TRIGGER,ACTION,IN_USE,ID" \
-        '.[] | [.displayName, (.retentionDuration.days? // "-" | tostring), (.retentionTrigger // "-"), (.actionAfterRetentionPeriod // "-"), (.isInUse | tostring), .id] | @tsv' jq
-
-    echo "$result" | _grim_command_output_render
+    echo "$result" \
+        | jq -r '.[] | [.displayName, (.retentionDuration.days? // "-" | tostring), (.retentionTrigger // "-"), (.actionAfterRetentionPeriod // "-"), (.isInUse | tostring), .id] | @tsv' \
+        | _grim_command_output_render "NAME,DURATION_DAYS,TRIGGER,ACTION,IN_USE,ID"
 }
 
 ms365_purview_rlabel_show() {
-    _grim_command_requires az jq || return 1
+    _grim_command_requires jq || return 1
     _grim_command_description "Show details of a Purview retention label"
     _grim_command_param name --required --positional --help "Label display name (exact match)"
     _grim_command_param_parse "$@" || return 1
 
     local result
-    result=$(az rest --method GET \
-        --url "https://graph.microsoft.com/v1.0/security/labels/retentionLabels" \
-        2>/dev/null) || { _grim_message_error "Failed to fetch retention labels"; return 1; }
+    result=$(_ms365_graph_get "https://graph.microsoft.com/v1.0/security/labels/retentionLabels") || return 1
 
     local label
     label=$(jq --arg v "$name" '.value[] | select(.displayName | ascii_downcase == ($v | ascii_downcase))' <<< "$result")
     [[ -z "$label" ]] && { _grim_message_error "Retention label '$name' not found"; return 1; }
 
-    _grim_command_output_set "FIELD,VALUE" \
-        'to_entries[] | [.key, (.value | if type == "array" then join(", ") elif type == "object" then tojson else tostring end)] | @tsv' jq
-
-    echo "$label" | _grim_command_output_render
+    echo "$label" \
+        | jq -r 'to_entries[] | [.key, (.value | if type == "array" then join(", ") elif type == "object" then tojson else tostring end)] | @tsv' \
+        | _grim_command_output_render "FIELD,VALUE"
 }
 
 ms365_purview_rlabel_add() {
-    _grim_command_requires az jq || return 1
+    _grim_command_requires jq || return 1
     _grim_command_description "Create a new Purview retention label"
     _grim_command_param name               --required --positional --help "Label display name"
     _grim_command_param duration           --help "Retention period in days"
@@ -172,15 +156,13 @@ ms365_purview_rlabel_add() {
     fi
 
     local result
-    result=$(az rest --method POST \
-        --url "https://graph.microsoft.com/v1.0/security/labels/retentionLabels" \
-        --body "$body" \
-        2>/dev/null) || { _grim_message_error "Failed to create retention label '$name'"; return 1; }
+    result=$(_ms365_graph_post \
+        "https://graph.microsoft.com/v1.0/security/labels/retentionLabels" \
+        "$body") || return 1
 
-    _grim_command_output_set "FIELD,VALUE" \
-        'to_entries[] | [.key, (.value | if type == "array" then join(", ") elif type == "object" then tojson else tostring end)] | @tsv' jq
-
-    echo "$result" | _grim_command_output_render
+    echo "$result" \
+        | jq -r 'to_entries[] | [.key, (.value | if type == "array" then join(", ") elif type == "object" then tojson else tostring end)] | @tsv' \
+        | _grim_command_output_render "FIELD,VALUE"
 }
 
 # Register completions

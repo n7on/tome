@@ -28,10 +28,9 @@ ado_feed_list() {
         return 1
     }
 
-    _grim_command_output_set "NAME,ID" \
-        '.value[] | [.name, .id] | @tsv' jq
-
-    echo "$result" | _grim_command_output_render
+    echo "$result" \
+        | jq -r '.value[] | [.name, .id] | @tsv' \
+        | _grim_command_output_render "NAME,ID"
 }
 
 ado_feed_package_list() {
@@ -49,10 +48,9 @@ ado_feed_package_list() {
         return 1
     }
 
-    _grim_command_output_set "NAME,VERSION" \
-        '.value[] | [.name, .versions[0].version] | @tsv' jq
-
-    echo "$result" | _grim_command_output_render
+    echo "$result" \
+        | jq -r '.value[] | [.name, .versions[0].version] | @tsv' \
+        | _grim_command_output_render "NAME,VERSION"
 }
 
 ado_feed_package_download() {

@@ -88,8 +88,7 @@ azure_law_query() {
         rows=$(jq -r '.tables[0].rows[] | map(. // "" | tostring) | @tsv' <<< "$result")
     fi
 
-    _grim_command_output_set "$columns" '{print}' awk
-    echo "$rows" | _grim_command_output_render
+    echo "$rows" | _grim_command_output_render "$columns"
 }
 
 # Register completions

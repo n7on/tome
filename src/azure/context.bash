@@ -22,8 +22,6 @@ azure_context_list() {
     local current=""
     [[ -n "${AZURE_CONFIG_DIR:-}" ]] && current=$(basename "$AZURE_CONFIG_DIR")
 
-    _grim_command_output_set "NAME,USER,ACTIVE" '{print}' awk
-
     local dir
     {
         for dir in "$_azure_context_dir"/*/; do
@@ -34,7 +32,7 @@ azure_context_list() {
             [[ "$name" == "$current" ]] && active="*"
             printf "%s\t%s\t%s\n" "$name" "$user" "$active"
         done
-    } | _grim_command_output_render
+    } | _grim_command_output_render "NAME,USER,ACTIVE"
 }
 
 azure_context_add() {

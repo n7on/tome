@@ -107,30 +107,20 @@ _grim_command_requires_az_extension() {
     done
 }
 
-# Run a command array, piping stdout to output_render and capturing stderr as warnings
-# Usage: local cmd=(nmap -T4 -p- "$target")
-#        _grim_command_run "${cmd[@]}"
-_grim_command_run() {
-    if [[ $# -eq 0 ]]; then
-        _grim_message_error "_grim_command_run: no command specified"
-        return 1
-    fi
-
-    local stderr_file
-    stderr_file=$(mktemp)
-
-    _grim_cache_wrap "${cache:-0}" "$@" 2>"$stderr_file" | _grim_command_output_render
-
-    local rc=${PIPESTATUS[0]}
+# Handle stderr from _grim_command_exec calls
+# Shows stderr as warnings only with --debug, or always on failure
+_grim_command_exec_stderr() {
+    local stderr_file="$1" rc="$2"
 
     if [[ -s "$stderr_file" ]]; then
-        while IFS= read -r line; do
-            _grim_message_warn "$line"
-        done < "$stderr_file"
+        if [[ "${debug:-}" == "true" || $rc -ne 0 ]]; then
+            while IFS= read -r line; do
+                _grim_message_warn "$line"
+            done < "$stderr_file"
+        fi
     fi
 
     rm -f "$stderr_file"
-    return "$rc"
 }
 
 # Run a Python script from a namespace's python/ directory, capturing stderr as warnings
@@ -162,18 +152,11 @@ _grim_command_exec_python() {
     _grim_cache_wrap "${cache:-0}" "$_GRIM_PYTHON" "$script_path" "$@" 2>"$stderr_file"
 
     local rc=$?
-
-    if [[ -s "$stderr_file" ]]; then
-        while IFS= read -r line; do
-            _grim_message_warn "$line"
-        done < "$stderr_file"
-    fi
-
-    rm -f "$stderr_file"
+    _grim_command_exec_stderr "$stderr_file" "$rc"
     return "$rc"
 }
 
-# Run a command array, capturing stderr as warnings (no output rendering)
+# Run a command array with caching and stderr capture
 # Usage: _grim_command_exec "${cmd[@]}"
 _grim_command_exec() {
     if [[ $# -eq 0 ]]; then
@@ -187,14 +170,7 @@ _grim_command_exec() {
     _grim_cache_wrap "${cache:-0}" "$@" 2>"$stderr_file"
 
     local rc=$?
-
-    if [[ -s "$stderr_file" ]]; then
-        while IFS= read -r line; do
-            _grim_message_warn "$line"
-        done < "$stderr_file"
-    fi
-
-    rm -f "$stderr_file"
+    _grim_command_exec_stderr "$stderr_file" "$rc"
     return "$rc"
 }
 
@@ -389,6 +365,8 @@ _grim_command_complete_params() {
     _GRIM_COMMAND_HELP["${func}:select"]="Comma-separated list of columns to include"
     _GRIM_COMMAND_PARAMS["${func}:limit"]=1
     _GRIM_COMMAND_HELP["${func}:limit"]="Limit output to first N rows"
+    _GRIM_COMMAND_PARAMS["${func}:debug"]=1
+    _GRIM_COMMAND_HELP["${func}:debug"]="Show verbose error output from external commands"
     _GRIM_COMMAND_PARAMS["${func}:help"]=1
 
     for param in "$@"; do

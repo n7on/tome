@@ -26,10 +26,9 @@ entra_license() {
     local result
     result=$(_grim_command_exec _entra_get_all "https://graph.microsoft.com/v1.0/subscribedSkus") || return 1
 
-    _grim_command_output_set "SKU,CONSUMED,ENABLED,STATUS" \
-        '.[] | [.skuPartNumber, (.consumedUnits | tostring), (.prepaidUnits.enabled | tostring), .capabilityStatus] | @tsv' jq
-
-    echo "$result" | _grim_command_output_render
+    echo "$result" \
+        | jq -r '.[] | [.skuPartNumber, (.consumedUnits | tostring), (.prepaidUnits.enabled | tostring), .capabilityStatus] | @tsv' \
+        | _grim_command_output_render "SKU,CONSUMED,ENABLED,STATUS"
 }
 
 entra_license_plan_list() {
@@ -45,10 +44,9 @@ entra_license_plan_list() {
     [[ -n "$sku" ]]    && result=$(jq --arg v "$sku"    '[.[] | select(.skuPartNumber | ascii_downcase | contains($v | ascii_downcase))]' <<< "$result")
     [[ -n "$status" ]] && result=$(jq --arg v "$status" '[.[] | select(.servicePlans[].provisioningStatus | ascii_downcase == ($v | ascii_downcase))]' <<< "$result")
 
-    _grim_command_output_set "SKU,PLAN,STATUS,APPLIES_TO" \
-        '.[] | . as $sku | .servicePlans[] | [$sku.skuPartNumber, .servicePlanName, .provisioningStatus, .appliesTo] | @tsv' jq
-
-    echo "$result" | _grim_command_output_render
+    echo "$result" \
+        | jq -r '.[] | . as $sku | .servicePlans[] | [$sku.skuPartNumber, .servicePlanName, .provisioningStatus, .appliesTo] | @tsv' \
+        | _grim_command_output_render "SKU,PLAN,STATUS,APPLIES_TO"
 }
 
 # Register completions

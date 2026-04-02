@@ -30,8 +30,7 @@ entra_user_list() {
         ] | @tsv
     ') || return 1
 
-    _grim_command_output_set "NAME,UPN,ACCOUNT,MFA,LICENSES" '{print}' awk
-    echo "$result" | _grim_command_output_render
+    echo "$result" | _grim_command_output_render "NAME,UPN,ACCOUNT,MFA,LICENSES"
 }
 
 _grim_command_complete_params "entra_user_list" "filter"
