@@ -71,7 +71,7 @@ ado_feed_package_download() {
     }
 
     local version
-    version=$(echo "$result" | _grim_json_tsv 'value' 'name' 'version=versions.0.version' | awk -F'\t' -v n="$package" '$1==n{print $2}')
+    version=$(echo "$result" | json_find --path 'value' --where 'name' --equals "$package" --return 'versions.0.version')
     [[ -z "$version" ]] && { _grim_message_error "Package '$package' not found in feed '$feed'"; return 1; }
 
     az artifacts universal download \

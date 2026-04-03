@@ -40,7 +40,7 @@ _grim_command_config_get() {
     local config_file
     config_file=$(_grim_command_config_file "$1" "$2")
     [[ -f "$config_file" ]] || return 0
-    cat "$config_file" | _grim_json_get "$3" 2>/dev/null
+    cat "$config_file" | json_get --path "$3" 2>/dev/null
 }
 
 # Write a key/value to a module config file
@@ -52,9 +52,7 @@ _grim_command_config_set() {
         _grim_message_error "Config file not found: $config_file"
         return 1
     fi
-    local updated
-    updated=$("$_GRIM_PYTHON" "$_GRIM_DIR/src/_grim/python/config_set.py" "$config_file" "$3" "$4") || return 1
-    echo "$updated" > "$config_file"
+    json_set --file "$config_file" --key "$3" --value "$4" || return 1
 }
 
 # Filter and return completion items for a given prefix
@@ -240,53 +238,53 @@ _grim_command_param_parse() {
 
     # Store parsed flags and export to caller's scope
     # Reset all flags first to avoid stale values from previous calls
-    local exports=""
-    for key in "${!_GRIM_COMMAND_PARAMS[@]}"; do
-        [[ "$key" == "${func}:"* ]] || continue
-        local param_name="${key##*:}"
-        local flag_name="--${param_name}"
-        if [[ -v flags[$flag_name] ]]; then
-            _GRIM_COMMAND_FLAGS["${func}:${param_name}"]="${flags[$flag_name]}"
+    local _exports=""
+    for _key in "${!_GRIM_COMMAND_PARAMS[@]}"; do
+        [[ "$_key" == "${func}:"* ]] || continue
+        local _pname="${_key##*:}"
+        local _fname="--${_pname}"
+        if [[ -v flags[$_fname] ]]; then
+            _GRIM_COMMAND_FLAGS["${func}:${_pname}"]="${flags[$_fname]}"
         else
-            _GRIM_COMMAND_FLAGS["${func}:${param_name}"]="${_GRIM_COMMAND_DEFAULTS[${func}:${param_name}]:-}"
+            _GRIM_COMMAND_FLAGS["${func}:${_pname}"]="${_GRIM_COMMAND_DEFAULTS[${func}:${_pname}]:-}"
         fi
-        local value="${_GRIM_COMMAND_FLAGS[${func}:${param_name}]:-}"
-        exports+="$param_name=\"$value\"; "
+        local _val="${_GRIM_COMMAND_FLAGS[${func}:${_pname}]:-}"
+        _exports+="$_pname='${_val//\'/\'\\\'\'}'; "
     done
-    eval "$exports"
+    eval "$_exports"
 
     # Validate all parameters
-    for key in "${!_GRIM_COMMAND_PARAMS[@]}"; do
-        [[ "$key" == "${func}:"* ]] || continue
-        local param_name="${key##*:}"
-        local value="${_GRIM_COMMAND_FLAGS[${func}:${param_name}]:-}"
+    for _key in "${!_GRIM_COMMAND_PARAMS[@]}"; do
+        [[ "$_key" == "${func}:"* ]] || continue
+        local _pname="${_key##*:}"
+        local _val="${_GRIM_COMMAND_FLAGS[${func}:${_pname}]:-}"
 
-        if [[ -v _GRIM_COMMAND_REQUIRED["$key"] && -z "$value" ]]; then
-            _grim_message_error "Parameter --$param_name is required"
+        if [[ -v _GRIM_COMMAND_REQUIRED["$_key"] && -z "$_val" ]]; then
+            _grim_message_error "Parameter --$_pname is required"
             return 1
         fi
 
-        [[ -z "$value" ]] && continue
+        [[ -z "$_val" ]] && continue
 
-        if [[ -v _GRIM_COMMAND_REGEX["$key"] ]]; then
-            local regex="${_GRIM_COMMAND_REGEX[$key]}"
-            if [[ ! "$value" =~ $regex ]]; then
-                _grim_message_error "Parameter --$param_name does not match pattern: $regex, got: $value"
+        if [[ -v _GRIM_COMMAND_REGEX["$_key"] ]]; then
+            local _regex="${_GRIM_COMMAND_REGEX[$_key]}"
+            if [[ ! "$_val" =~ $_regex ]]; then
+                _grim_message_error "Parameter --$_pname does not match pattern: $_regex, got: $_val"
                 return 1
             fi
         fi
 
-        if [[ -v _GRIM_COMMAND_PATH["$key"] ]]; then
-            local path_type="${_GRIM_COMMAND_PATH[$key]}"
-            case "$path_type" in
+        if [[ -v _GRIM_COMMAND_PATH["$_key"] ]]; then
+            local _path_type="${_GRIM_COMMAND_PATH[$_key]}"
+            case "$_path_type" in
                 file)
-                    if [[ ! -f "$value" ]]; then
-                        _grim_message_error "Parameter --$param_name: file not found: $value"
+                    if [[ ! -f "$_val" ]]; then
+                        _grim_message_error "Parameter --$_pname: file not found: $_val"
                         return 1
                     fi ;;
                 dir)
-                    if [[ ! -d "$value" ]]; then
-                        _grim_message_error "Parameter --$param_name: directory not found: $value"
+                    if [[ ! -d "$_val" ]]; then
+                        _grim_message_error "Parameter --$_pname: directory not found: $_val"
                         return 1
                     fi ;;
             esac

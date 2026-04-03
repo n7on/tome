@@ -57,12 +57,7 @@ azure_graph_query() {
     result=$(_grim_command_exec "${cmd[@]}") || { _grim_message_error "Graph query failed"; return 1; }
 
     echo "$result" \
-        | _grim_json_tsv 'data' \
-            'name' \
-            'resource_group=resourceGroup' \
-            'location' \
-            'kind' \
-            'subscription_id=subscriptionId' \
+        | json_tsv --path 'data' --fields 'name,resource_group=resourceGroup,location,kind,subscription_id=subscriptionId' \
         | _grim_command_output_render
 }
 

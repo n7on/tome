@@ -3,16 +3,8 @@ ms365_purview_slabel_list() {
     _grim_command_description "List Purview sensitive information labels"
     _grim_command_param_parse "$@" || return 1
 
-    local result
-    result=$(_ms365_graph_get "https://graph.microsoft.com/beta/security/informationProtection/sensitivityLabels") || return 1
-
-    echo "$result" \
-        | _grim_json_tsv 'value' \
-            'name' \
-            'parent=parent.name' \
-            'active=isActive' \
-            'scope=contentFormats' \
-            'id' \
+    _ms365_graph_get "https://graph.microsoft.com/beta/security/informationProtection/sensitivityLabels" \
+        | json_tsv --path 'value' --fields 'name,parent=parent.name,active=isActive,scope=contentFormats,id' \
         | _grim_command_output_render
 }
 
@@ -24,11 +16,11 @@ ms365_purview_slabel_show() {
     local result label_id
     result=$(_ms365_graph_get "https://graph.microsoft.com/beta/security/informationProtection/sensitivityLabels") || return 1
 
-    label_id=$(echo "$result" | _grim_json_tsv 'value' 'id' 'name' | awk -F'\t' -v n="$name" 'tolower($2)==tolower(n){print $1}')
+    label_id=$(echo "$result" | json_find --path 'value' --where 'name' --equals "$name" --return 'id')
     [[ -z "$label_id" ]] && { _grim_message_error "Label '$name' not found"; return 1; }
 
     _ms365_graph_get "https://graph.microsoft.com/beta/security/informationProtection/sensitivityLabels/$label_id" \
-        | _grim_json_tsv '.' --kv \
+        | json_kv \
         | _grim_command_output_render
 }
 
@@ -42,27 +34,20 @@ ms365_purview_slabel_add() {
     _grim_command_param_parse "$@" || return 1
 
     local body
-    body=$(_grim_json_build \
-        "name=$name" \
-        "description=$description" \
-        "tooltip=$tooltip" \
-        "color=$color")
+    body=$(json_build "name=$name" "description=$description" "tooltip=$tooltip" "color=$color")
 
     if [[ -n "$parent" ]]; then
         local labels parent_id
         labels=$(_ms365_graph_get "https://graph.microsoft.com/beta/security/informationProtection/sensitivityLabels") || return 1
-        parent_id=$(echo "$labels" | _grim_json_tsv 'value' 'id' 'name' | awk -F'\t' -v n="$parent" 'tolower($2)==tolower(n){print $1}')
+        parent_id=$(echo "$labels" | json_find --path 'value' --where 'name' --equals "$parent" --return 'id')
         [[ -z "$parent_id" ]] && { _grim_message_error "Parent label '$parent' not found"; return 1; }
-        body=$(_grim_json_build --base "$body" "parentId=$parent_id")
+        body=$(json_build --base "$body" "parentId=$parent_id")
     fi
 
-    local result
-    result=$(_ms365_graph_post \
+    _ms365_graph_post \
         "https://graph.microsoft.com/beta/security/informationProtection/sensitivityLabels" \
-        "$body") || return 1
-
-    echo "$result" \
-        | _grim_json_tsv '.' --kv \
+        "$body" \
+        | json_kv \
         | _grim_command_output_render
 }
 
@@ -70,17 +55,8 @@ ms365_purview_rlabel_list() {
     _grim_command_description "List Purview retention labels"
     _grim_command_param_parse "$@" || return 1
 
-    local result
-    result=$(_ms365_graph_get "https://graph.microsoft.com/v1.0/security/labels/retentionLabels") || return 1
-
-    echo "$result" \
-        | _grim_json_tsv 'value' \
-            'name=displayName' \
-            'duration_days=retentionDuration.days' \
-            'trigger=retentionTrigger' \
-            'action=actionAfterRetentionPeriod' \
-            'in_use=isInUse' \
-            'id' \
+    _ms365_graph_get "https://graph.microsoft.com/v1.0/security/labels/retentionLabels" \
+        | json_tsv --path 'value' --fields 'name=displayName,duration_days=retentionDuration.days,trigger=retentionTrigger,action=actionAfterRetentionPeriod,in_use=isInUse,id' \
         | _grim_command_output_render
 }
 
@@ -92,11 +68,11 @@ ms365_purview_rlabel_show() {
     local result label_id
     result=$(_ms365_graph_get "https://graph.microsoft.com/v1.0/security/labels/retentionLabels") || return 1
 
-    label_id=$(echo "$result" | _grim_json_tsv 'value' 'id' 'name=displayName' | awk -F'\t' -v n="$name" 'tolower($2)==tolower(n){print $1}')
+    label_id=$(echo "$result" | json_find --path 'value' --where 'displayName' --equals "$name" --return 'id')
     [[ -z "$label_id" ]] && { _grim_message_error "Retention label '$name' not found"; return 1; }
 
     _ms365_graph_get "https://graph.microsoft.com/v1.0/security/labels/retentionLabels/$label_id" \
-        | _grim_json_tsv '.' --kv \
+        | json_kv \
         | _grim_command_output_render
 }
 
@@ -111,7 +87,7 @@ ms365_purview_rlabel_add() {
     _grim_command_param_parse "$@" || return 1
 
     local body
-    body=$(_grim_json_build \
+    body=$(json_build \
         "displayName=$name" \
         "retentionTrigger=$trigger" \
         "actionAfterRetentionPeriod=$action" \
@@ -119,17 +95,14 @@ ms365_purview_rlabel_add() {
         "descriptionForUsers=$description_users")
 
     if [[ -n "$duration" ]]; then
-        body=$(_grim_json_build --base "$body" \
+        body=$(json_build --base "$body" \
             "json:retentionDuration={\"@odata.type\": \"#microsoft.graph.security.retentionDurationInDays\", \"days\": $duration}")
     fi
 
-    local result
-    result=$(_ms365_graph_post \
+    _ms365_graph_post \
         "https://graph.microsoft.com/v1.0/security/labels/retentionLabels" \
-        "$body") || return 1
-
-    echo "$result" \
-        | _grim_json_tsv '.' --kv \
+        "$body" \
+        | json_kv \
         | _grim_command_output_render
 }
 

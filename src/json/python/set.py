@@ -1,7 +1,7 @@
-"""Set a key/value in a JSON config file.
+"""Set a key/value in a JSON file.
 
 Usage:
-    config_set.py <file> <key> <value>
+    set.py <file> <key> <value>
 """
 
 import json
@@ -18,7 +18,8 @@ def main():
 
     data[key] = value
 
-    json.dump(data, sys.stdout, indent=2)
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=2)
 
 
 if __name__ == "__main__":

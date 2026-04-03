@@ -44,10 +44,10 @@ ms365_app_setup() {
 
     # Create or update app
     local app app_id
-    app=$(az ad app list --display-name "$_MS365_APP_NAME" --output json 2>/dev/null | _grim_json_find '.' 'displayName' "$_MS365_APP_NAME")
+    app=$(az ad app list --display-name "$_MS365_APP_NAME" --output json 2>/dev/null | json_find --path '.' --where 'displayName' --equals "$_MS365_APP_NAME")
 
     if [[ -n "$app" ]]; then
-        app_id=$(echo "$app" | _grim_json_get 'appId')
+        app_id=$(echo "$app" | json_get --path 'appId')
         _grim_command_exec az ad app update --id "$app_id" \
             --required-resource-accesses "$required_resource_access" \
             --is-fallback-public-client true >/dev/null || {
@@ -65,7 +65,7 @@ ms365_app_setup() {
             _grim_message_error "Failed to create app '$_MS365_APP_NAME'"
             return 1
         }
-        app_id=$(echo "$new_app" | _grim_json_get 'appId')
+        app_id=$(echo "$new_app" | json_get --path 'appId')
         _grim_message_warn "Created app '$_MS365_APP_NAME' ($app_id)"
     fi
 
@@ -79,7 +79,7 @@ ms365_app_setup() {
     # Grant admin consent for application permissions (appRoleAssignments)
     for perm in "${_MS365_APP_PERMISSIONS[@]}"; do
         local role_id
-        role_id=$(echo "$graph_sp" | _grim_json_find 'appRoles' 'value' "$perm" 'id')
+        role_id=$(echo "$graph_sp" | json_find --path 'appRoles' --where 'value' --equals "$perm" --return 'id')
         _grim_command_exec az rest --method POST \
             --url "https://graph.microsoft.com/v1.0/servicePrincipals/$sp_id/appRoleAssignments" \
             --body "{\"principalId\":\"$sp_id\",\"resourceId\":\"$graph_sp_id\",\"appRoleId\":\"$role_id\"}" \
@@ -90,7 +90,7 @@ ms365_app_setup() {
     local scope_ids=""
     for perm in "${_MS365_DELEGATED_PERMISSIONS[@]}"; do
         local scope_id
-        scope_id=$(echo "$graph_sp" | _grim_json_find 'oauth2PermissionScopes' 'value' "$perm" 'id')
+        scope_id=$(echo "$graph_sp" | json_find --path 'oauth2PermissionScopes' --where 'value' --equals "$perm" --return 'id')
         [[ -n "$scope_ids" ]] && scope_ids+=" "
         scope_ids+="$scope_id"
     done
@@ -98,7 +98,7 @@ ms365_app_setup() {
     local existing_grant
     existing_grant=$(_grim_command_exec az rest --method GET \
         --url "https://graph.microsoft.com/v1.0/oauth2PermissionGrants?\$filter=clientId eq '$sp_id' and resourceId eq '$graph_sp_id'" \
-        | _grim_json_get 'value.0.id')
+        | json_get --path 'value.0.id')
 
     if [[ -n "$existing_grant" ]]; then
         _grim_command_exec az rest --method PATCH \
@@ -128,12 +128,12 @@ ms365_app_setup() {
     }
 
     local secret tenant
-    secret=$(echo "$secret_result" | _grim_json_get 'password')
-    tenant=$(echo "$secret_result" | _grim_json_get 'tenant')
+    secret=$(echo "$secret_result" | json_get --path 'password')
+    tenant=$(echo "$secret_result" | json_get --path 'tenant')
 
     # Save config
     mkdir -p "$_MS365_TOKEN_DIR"
-    _grim_json_build "app_id=$app_id" "secret=$secret" "tenant=$tenant" \
+    json_build "app_id=$app_id" "secret=$secret" "tenant=$tenant" \
         > "$_MS365_TOKEN_DIR/app.json"
 
     _grim_message_warn "Setup complete."
@@ -148,7 +148,7 @@ ms365_app_show() {
 
     local app
     app=$(az ad app list --display-name "$_MS365_APP_NAME" --output json 2>/dev/null \
-        | _grim_json_find '.' 'displayName' "$_MS365_APP_NAME")
+        | json_find --path '.' --where 'displayName' --equals "$_MS365_APP_NAME")
     [[ -z "$app" ]] && { _grim_message_error "App '$_MS365_APP_NAME' not found. Run ms365_app_setup first."; return 1; }
 
     local graph_sp
@@ -169,8 +169,8 @@ ms365_login() {
     [[ -f "$config" ]] || { _grim_message_error "App not configured. Run ms365_app_setup first."; return 1; }
 
     local app_id tenant
-    app_id=$(cat "$config" | _grim_json_get 'app_id')
-    tenant=$(cat "$config" | _grim_json_get 'tenant')
+    app_id=$(cat "$config" | json_get --path 'app_id')
+    tenant=$(cat "$config" | json_get --path 'tenant')
 
     local scopes=""
     for perm in "${_MS365_DELEGATED_PERMISSIONS[@]}"; do
@@ -186,14 +186,14 @@ ms365_login() {
         -d "scope=$scopes")
 
     local device_code interval message
-    device_code=$(echo "$device_response" | _grim_json_get 'device_code')
-    interval=$(echo "$device_response" | _grim_json_get 'interval')
-    message=$(echo "$device_response" | _grim_json_get 'message')
+    device_code=$(echo "$device_response" | json_get --path 'device_code')
+    interval=$(echo "$device_response" | json_get --path 'interval')
+    message=$(echo "$device_response" | json_get --path 'message')
 
     if [[ -z "$device_code" ]]; then
         local err_msg
-        err_msg=$(echo "$device_response" | _grim_json_get 'error_description')
-        [[ "$err_msg" == "-" ]] && err_msg=$(echo "$device_response" | _grim_json_get 'error')
+        err_msg=$(echo "$device_response" | json_get --path 'error_description')
+        [[ "$err_msg" == "-" ]] && err_msg=$(echo "$device_response" | json_get --path 'error')
         _grim_message_error "Failed to start device code flow: $err_msg"
         return 1
     fi
@@ -210,7 +210,7 @@ ms365_login() {
             -d "grant_type=urn:ietf:params:oauth:grant-type:device_code")
 
         local error
-        error=$(echo "$token_response" | _grim_json_get 'error')
+        error=$(echo "$token_response" | json_get --path 'error')
 
         case "$error" in
             authorization_pending) continue ;;
@@ -223,8 +223,8 @@ ms365_login() {
                 ;;
             *)
                 local err_msg
-                err_msg=$(echo "$token_response" | _grim_json_get 'error_description')
-                [[ "$err_msg" == "-" ]] && err_msg=$(echo "$token_response" | _grim_json_get 'error')
+                err_msg=$(echo "$token_response" | json_get --path 'error_description')
+                [[ "$err_msg" == "-" ]] && err_msg=$(echo "$token_response" | json_get --path 'error')
                 _grim_message_error "Login failed: $err_msg"
                 return 1
                 ;;
@@ -239,16 +239,16 @@ _ms365_get_user_token() {
     [[ -f "$_MS365_USER_TOKEN_FILE" ]] || { _grim_message_error "Not logged in. Run ms365_login first."; return 1; }
 
     local expires_on
-    expires_on=$(cat "$_MS365_USER_TOKEN_FILE" | _grim_json_get 'expires_on')
+    expires_on=$(cat "$_MS365_USER_TOKEN_FILE" | json_get --path 'expires_on')
     if [[ $(date +%s) -lt ${expires_on:-0} ]]; then
-        cat "$_MS365_USER_TOKEN_FILE" | _grim_json_get 'access_token'
+        cat "$_MS365_USER_TOKEN_FILE" | json_get --path 'access_token'
         return 0
     fi
 
     local app_id tenant refresh_token
-    app_id=$(cat "$config" | _grim_json_get 'app_id')
-    tenant=$(cat "$config" | _grim_json_get 'tenant')
-    refresh_token=$(cat "$_MS365_USER_TOKEN_FILE" | _grim_json_get 'refresh_token')
+    app_id=$(cat "$config" | json_get --path 'app_id')
+    tenant=$(cat "$config" | json_get --path 'tenant')
+    refresh_token=$(cat "$_MS365_USER_TOKEN_FILE" | json_get --path 'refresh_token')
 
     [[ -z "$refresh_token" ]] && { _grim_message_error "Session expired. Run ms365_login to re-authenticate."; return 1; }
 
@@ -260,7 +260,7 @@ _ms365_get_user_token() {
         -d "grant_type=refresh_token")
 
     local token
-    token=$(echo "$response" | _grim_json_get 'access_token')
+    token=$(echo "$response" | json_get --path 'access_token')
     if [[ -z "$token" ]]; then
         _grim_message_error "Token refresh failed. Run ms365_login to re-authenticate."
         rm -f "$_MS365_USER_TOKEN_FILE"
@@ -282,17 +282,17 @@ _ms365_get_app_token() {
     # Check cached token
     if [[ -f "$_MS365_APP_TOKEN_FILE" ]]; then
         local expires_on
-        expires_on=$(cat "$_MS365_APP_TOKEN_FILE" | _grim_json_get 'expires_on')
+        expires_on=$(cat "$_MS365_APP_TOKEN_FILE" | json_get --path 'expires_on')
         if [[ $(date +%s) -lt ${expires_on:-0} ]]; then
-            cat "$_MS365_APP_TOKEN_FILE" | _grim_json_get 'access_token'
+            cat "$_MS365_APP_TOKEN_FILE" | json_get --path 'access_token'
             return 0
         fi
     fi
 
     local app_id secret tenant
-    app_id=$(cat "$config" | _grim_json_get 'app_id')
-    secret=$(cat "$config" | _grim_json_get 'secret')
-    tenant=$(cat "$config" | _grim_json_get 'tenant')
+    app_id=$(cat "$config" | json_get --path 'app_id')
+    secret=$(cat "$config" | json_get --path 'secret')
+    tenant=$(cat "$config" | json_get --path 'tenant')
 
     [[ -z "$secret" ]] && { _grim_message_error "No client secret. Re-run ms365_app_setup."; return 1; }
 
@@ -305,11 +305,11 @@ _ms365_get_app_token() {
         -d "grant_type=client_credentials")
 
     local token
-    token=$(echo "$response" | _grim_json_get 'access_token')
+    token=$(echo "$response" | json_get --path 'access_token')
     if [[ -z "$token" ]]; then
         local err_msg
-        err_msg=$(echo "$response" | _grim_json_get 'error_description')
-        [[ "$err_msg" == "-" ]] && err_msg=$(echo "$response" | _grim_json_get 'error')
+        err_msg=$(echo "$response" | json_get --path 'error_description')
+        [[ "$err_msg" == "-" ]] && err_msg=$(echo "$response" | json_get --path 'error')
         _grim_message_error "Failed to get app token: $err_msg"
         return 1
     fi
@@ -326,10 +326,10 @@ _ms365_get_app_token() {
 _ms365_graph_check() {
     local response="$1"
     local error
-    error=$(echo "$response" | _grim_json_get 'error.message' 2>/dev/null)
+    error=$(echo "$response" | json_get --path 'error.message' 2>/dev/null)
     if [[ -n "$error" && "$error" != "-" ]]; then
         local code
-        code=$(echo "$response" | _grim_json_get 'error.code' 2>/dev/null)
+        code=$(echo "$response" | json_get --path 'error.code' 2>/dev/null)
         _grim_message_error "$code: $error"
         return 1
     fi

@@ -1,17 +1,11 @@
 """Build a JSON object from key=value pairs.
 
 Usage:
-    _grim_json_build 'name=foo' 'count=42'
-    _grim_json_build --base '{"existing": true}' 'name=foo'
-    _grim_json_build --int 'days=30' 'name=foo'
-    _grim_json_build --bool 'active=true' 'name=foo'
+    build.py [--base JSON] key=value [key=value ...]
 
-Empty values are omitted. Nested keys are supported via dot notation:
-    _grim_json_build 'retentionDuration.days=30'
-    -> {"retentionDuration": {"days": "30"}}
-
-Type hints: prefix key with type and colon:
-    _grim_json_build 'int:count=42' 'bool:active=true' 'name=foo'
+Type hints via prefix: int:count=42, float:rate=0.5, bool:active=true, json:data={...}
+Nested keys via dots: retentionDuration.days=30
+Empty values are omitted.
 """
 
 import json
@@ -61,16 +55,11 @@ def main():
         if "=" not in pair:
             continue
         key, value = pair.split("=", 1)
-
-        # Skip empty values
         if not value:
             continue
-
-        # Check for type hint (int:field=value)
         type_hint = None
         if ":" in key:
             type_hint, key = key.split(":", 1)
-
         set_nested(obj, key, parse_value(value, type_hint))
 
     json.dump(obj, sys.stdout, ensure_ascii=False)

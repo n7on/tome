@@ -1,5 +1,5 @@
 entra_app_list() {
-    _grim_command_requires az jq || return 1
+    _grim_command_requires az || return 1
     _grim_command_description "List Entra app registrations with their permissions"
     _grim_command_param_parse "$@" || return 1
 
@@ -17,26 +17,14 @@ entra_app_list() {
         _grim_message_error "Failed to fetch Microsoft Graph permissions"
         return 1
     }
-    local perm_map
-    perm_map=$(jq '(.scopes + .roles) | map({(.id): .value}) | add // {}' <<< "$graph_sp")
 
-    jq -r \
-        --argjson permMap "$perm_map" '
-        .[] | [
-            .displayName,
-            .appId,
-            ([ .requiredResourceAccess[].resourceAccess[] |
-                $permMap[.id] // .id
-            ] | join(","))
-        ] | @tsv
-    ' <<< "$apps" | _grim_command_output_render "name,client_id,permissions"
+    _grim_command_exec_python entra app_list.py "$apps" "$graph_sp" \
+        | _grim_command_output_render
 }
 
 entra_permission_list() {
-    _grim_command_requires az jq || return 1
+    _grim_command_requires az || return 1
     _grim_command_description "List Microsoft Graph OAuth permission scopes"
-    _grim_command_param name --positional --help "Filter by name (partial match)"
-    _grim_command_param type --help "Filter by type (delegated, application)"
     _grim_command_param_parse "$@" || return 1
 
     local graph_sp
@@ -45,22 +33,10 @@ entra_permission_list() {
         return 1
     }
 
-    local filter_name="${name:-}"
-    local filter_type="${type:-}"
-
-    jq -r --arg name "$filter_name" --arg type "$filter_type" '
-        ([ .oauth2PermissionScopes[] | {value, description: (.adminConsentDescription // "-"), type: "delegated"} ] +
-         [ .appRoles[]               | {value, description: (.description // "-"), type: "application"} ])
-        | .[]
-        | select($name == "" or (.value | ascii_downcase | contains($name | ascii_downcase)))
-        | select($type == "" or .type == $type)
-        | [.value, .type, .description]
-        | @tsv
-    ' <<< "$graph_sp" \
-        | sort \
-        | _grim_command_output_render "permission,type,description"
+    echo "$graph_sp" \
+        | _grim_command_exec_python entra permission_list.py \
+        | _grim_command_output_render
 }
 
 _grim_command_complete_params entra_app_list
-_grim_command_complete_params "entra_permission_list" "name" "type"
-_grim_command_complete_values "entra_permission_list" "type" "delegated" "application"
+_grim_command_complete_params "entra_permission_list"

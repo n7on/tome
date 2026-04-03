@@ -44,7 +44,7 @@ _azure_law_load_query() {
 }
 
 azure_law_query() {
-    _grim_command_requires az jq || return 1
+    _grim_command_requires az || return 1
     _grim_command_requires_az_extension log-analytics || return 1
     _grim_command_description "Query Azure Log Analytics workspace using a saved KQL file"
     _grim_command_param name      --required --positional --help "Query name (from queries/law/)"
@@ -71,24 +71,9 @@ azure_law_query() {
         --timespan "$timespan" \
         --output json) || { _grim_message_error "Log Analytics query failed"; return 1; }
 
-    local columns rows
-    if jq -e 'type == "array"' <<< "$result" &>/dev/null; then
-        # New az CLI format: array of objects
-        if jq -e 'length == 0' <<< "$result" &>/dev/null; then
-            _grim_message_warn "No results found"
-            return 0
-        fi
-        local keys
-        keys=$(jq -c '[.[0] | keys_unsorted[]]' <<< "$result")
-        columns=$(jq -r '[.[0] | keys_unsorted[] | ascii_upcase] | join(",")' <<< "$result")
-        rows=$(jq -r --argjson keys "$keys" '.[] | [.[$keys[]]] | map(. // "" | tostring) | @tsv' <<< "$result")
-    else
-        # Old format: tables structure
-        columns=$(jq -r '[.tables[0].columns[].name | ascii_upcase] | join(",")' <<< "$result")
-        rows=$(jq -r '.tables[0].rows[] | map(. // "" | tostring) | @tsv' <<< "$result")
-    fi
-
-    echo "$rows" | _grim_command_output_render "$columns"
+    echo "$result" \
+        | _grim_command_exec_python azure law_result.py \
+        | _grim_command_output_render
 }
 
 # Register completions

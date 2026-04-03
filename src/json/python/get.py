@@ -1,30 +1,23 @@
 """Get a single value from JSON by path.
 
 Usage:
-    echo "$json" | json_get.py 'appId'
-    echo "$json" | json_get.py 'subscriptions.0.user.name'
+    echo "$json" | get.py <path>
 
-Returns empty string for null/missing values.
+Returns empty for null/missing values (exit 0, no output).
 """
 
-import json
 import sys
 
-from json_utils import resolve
+from utils import load_stdin, resolve_root, to_string
 
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: json_get.py <path>", file=sys.stderr)
+        print("Usage: get.py <path>", file=sys.stderr)
         sys.exit(1)
 
-    path = sys.argv[1]
-    data = json.load(sys.stdin)
-
-    if path == ".":
-        target = data
-    else:
-        target = resolve(data, path)
+    data = load_stdin()
+    target = resolve_root(data, sys.argv[1])
 
     if target is None:
         sys.exit(0)
@@ -32,6 +25,7 @@ def main():
     if isinstance(target, bool):
         print(str(target).lower())
     elif isinstance(target, (list, dict)):
+        import json
         json.dump(target, sys.stdout, ensure_ascii=False)
     else:
         print(target)

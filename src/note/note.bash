@@ -37,9 +37,9 @@ note_add() {
     timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
     local new_note
-    new_note=$(_grim_json_build "id=$id" "message=$message" "timestamp=$timestamp")
+    new_note=$(json_build "id=$id" "message=$message" "timestamp=$timestamp")
 
-    _grim_command_exec_python note add_note.py "$file" "$new_note"
+    json_append --file "$file" --item "$new_note"
 
     _note_git_push "add note $id"
 
@@ -62,7 +62,7 @@ note_list() {
     fi
 
     cat "$file" \
-        | _grim_json_tsv '.' 'id' 'timestamp' 'message' \
+        | json_tsv --path '.' --fields 'id,timestamp,message' \
         | _grim_command_output_render
 }
 
@@ -79,7 +79,7 @@ note_delete() {
     for file in "$_NOTE_DIR"/*.json; do
         [[ -f "$file" ]] || continue
 
-        if _grim_command_exec_python note delete_note.py "$file" "$id" 2>/dev/null; then
+        if json_remove --file "$file" --match 'id' --value "$id" 2>/dev/null; then
             found=1
             break
         fi
