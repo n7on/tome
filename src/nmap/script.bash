@@ -11,8 +11,8 @@ nmap_script_run() {
     [[ -n "$ports" ]] && cmd+=(-p "$ports")
 
     _grim_command_exec "${cmd[@]}" \
-        | _grim_extract --text '/^[0-9]+\//' 'port=$1' 'state=$2' 'service=$3' \
-        | _grim_command_output_render
+        | awk '/^[0-9]+\//{printf "%s\t%s\t%s\n", $1, $2, $3}' \
+        | _grim_command_output_render "port,state,service"
 }
 
 # Register completions

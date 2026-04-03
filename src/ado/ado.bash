@@ -29,7 +29,7 @@ ado_feed_list() {
     }
 
     echo "$result" \
-        | _grim_extract --json '.value[]' 'name=.name' 'id=.id' \
+        | json_tsv --path 'value' --fields 'name,id' \
         | _grim_command_output_render
 }
 
@@ -49,7 +49,7 @@ ado_feed_package_list() {
     }
 
     echo "$result" \
-        | _grim_extract --json '.value[]' 'name=.name' 'version=.versions[0].version' \
+        | json_tsv --path 'value' --fields 'name,version=versions.0.version' \
         | _grim_command_output_render
 }
 
