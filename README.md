@@ -58,23 +58,6 @@ grim azure graph query my_query --cache 3600     # cache for 1 hour
 grim cache clear                                 # clear all cached results
 ```
 
-## Vim integration
-
-Add to your `.vimrc`:
-
-```vim
-source /path/to/grim/vim/grim.vim
-```
-
-This adds a `:Grim` command with tab completion. The first argument completes command names, subsequent arguments complete `--flags`:
-
-```vim
-:Grim nmap scan quick localhost
-:Grim azure context list --output json
-```
-
-Output opens in a scratch split.
-
 ## Available commands
 
 See [COMMANDS.md](COMMANDS.md) for the full command reference.
