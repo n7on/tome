@@ -12,6 +12,11 @@ if [[ "${1:-}" == "completion" && "${2:-}" == "bash" ]]; then
     exit $?
 fi
 
+if [[ "${1:-}" == "completion" && "${2:-}" == "zsh" ]]; then
+    completion_zsh
+    exit $?
+fi
+
 # Collect non-flag leading words to form the command name
 parts=()
 for arg in "$@"; do
