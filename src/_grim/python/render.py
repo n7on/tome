@@ -119,8 +119,8 @@ def select_columns(headers: list[str], rows: list[list[str]], expr: str) -> tupl
     for name in names:
         idx = resolve_column(headers, name)
         if idx < 0:
-            print(f"Unknown select column: {name} (available: {','.join(headers)})", file=sys.stderr)
-            return headers, rows
+            print(f"Unknown column: {name} (available: {','.join(headers)})", file=sys.stderr)
+            sys.exit(1)
         indices.append(idx)
     new_headers = [headers[i] for i in indices]
     new_rows = [[r[i] for i in indices] for r in rows]
