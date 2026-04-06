@@ -14,16 +14,16 @@ bash setup.bash
 
 Add to `~/.bashrc`:
 ```bash
-source /path/to/grim/init.bash
+export PATH="/path/to/grim/bin:$PATH"
+source <(grim completion bash)
 ```
 
 ## Usage
 
-After sourcing `init.bash`, commands are available directly in your shell:
-
 ```bash
-nmap_scan_quick localhost
-azure_context_list --output json
+grim nmap scan quick localhost
+grim azure context list --output json
+grim note add "my note #tag"
 ```
 
 ## Output formats
@@ -43,19 +43,19 @@ All commands support `--output`:
 All commands support these flags to slice and filter results:
 
 ```bash
-azure_context_list --filter name=prod       # exact match (wildcards supported)
-azure_context_list --filter name~prod       # contains match
-azure_context_list --sort -name             # sort descending
-azure_context_list --select name,id         # pick columns
-azure_context_list --limit 10               # first N rows
+grim azure context list --filter name=prod       # exact match (wildcards supported)
+grim azure context list --filter name~prod       # contains match
+grim azure context list --sort -name             # sort descending
+grim azure context list --select name,id         # pick columns
+grim azure context list --limit 10               # first N rows
 ```
 
 ## Caching
 
 ```bash
-azure_graph_query my_query --cache          # cache for 300s (default)
-azure_graph_query my_query --cache 3600     # cache for 1 hour
-grim_cache_clear                            # clear all cached results
+grim azure graph query my_query --cache          # cache for 300s (default)
+grim azure graph query my_query --cache 3600     # cache for 1 hour
+grim cache clear                                 # clear all cached results
 ```
 
 ## Vim integration
@@ -69,8 +69,8 @@ source /path/to/grim/vim/grim.vim
 This adds a `:Grim` command with tab completion. The first argument completes command names, subsequent arguments complete `--flags`:
 
 ```vim
-:Grim nmap_scan_quick localhost
-:Grim azure_context_list --output json
+:Grim nmap scan quick localhost
+:Grim azure context list --output json
 ```
 
 Output opens in a scratch split.

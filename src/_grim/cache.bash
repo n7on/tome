@@ -58,12 +58,3 @@ _grim_cache_wrap() {
     echo "$output"
     return "$rc"
 }
-
-# Clear all cached data
-# Usage: grim_cache_clear
-grim_cache_clear() {
-    if [[ -d "$_GRIM_CACHE_DIR" ]]; then
-        rm -rf "$_GRIM_CACHE_DIR"
-        _grim_message_warn "Cache cleared"
-    fi
-}

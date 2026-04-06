@@ -3,14 +3,14 @@
 Grim is a bash CLI framework. Run commands using `grim`:
 
 ```bash
-grim nmap_scan_quick localhost
-grim azure_graph_query my_query --output json
-grim note_add "my note #tag"
+grim nmap scan quick localhost
+grim azure graph query my_query --output json
+grim note add "my note #tag"
 ```
 
 ## ado
 
-### `ado_feed_list`
+### `ado feed list`
 
 List Azure DevOps feeds
 
@@ -18,7 +18,7 @@ List Azure DevOps feeds
 | --- | --- | --- |
 | `--organization` |  | Azure DevOps organization |
 
-### `ado_feed_package_download`
+### `ado feed package download`
 
 Download latest package from Azure DevOps feed
 
@@ -29,7 +29,7 @@ Download latest package from Azure DevOps feed
 | `--package` | yes | Package name. Positional |
 | `--path` |  | Download path. Default: `.` |
 
-### `ado_feed_package_list`
+### `ado feed package list`
 
 List packages in an Azure DevOps feed
 
@@ -40,7 +40,7 @@ List packages in an Azure DevOps feed
 
 ## azure
 
-### `azure_context_add`
+### `azure context add`
 
 Create a new Azure context and log in
 
@@ -48,11 +48,11 @@ Create a new Azure context and log in
 | --- | --- | --- |
 | `--name` | yes | Context name. Positional |
 
-### `azure_context_list`
+### `azure context list`
 
 List available Azure contexts
 
-### `azure_context_remove`
+### `azure context remove`
 
 Remove a named Azure context
 
@@ -60,7 +60,7 @@ Remove a named Azure context
 | --- | --- | --- |
 | `--name` | yes | Context name. Positional |
 
-### `azure_context_switch`
+### `azure context switch`
 
 Switch to a named Azure context (use 'default' to restore ~/.azure)
 
@@ -68,7 +68,7 @@ Switch to a named Azure context (use 'default' to restore ~/.azure)
 | --- | --- | --- |
 | `--name` | yes | Context name (or 'default'). Positional |
 
-### `azure_graph_query`
+### `azure graph query`
 
 Query Azure Resource Graph using a saved KQL file
 
@@ -77,7 +77,7 @@ Query Azure Resource Graph using a saved KQL file
 | `--name` | yes | Query name (from queries/graph/). Positional |
 | `--subscriptions` |  | Comma-separated list of subscription IDs to scope the query |
 
-### `azure_law_query`
+### `azure law query`
 
 Query Azure Log Analytics workspace using a saved KQL file
 
@@ -87,25 +87,55 @@ Query Azure Log Analytics workspace using a saved KQL file
 | `--timespan` |  | Query timespan as ISO 8601 duration. Default: `PT1H` |
 | `--workspace` | yes | Log Analytics workspace name or ID |
 
+## command
+
+### `command docs`
+
+Generate markdown documentation for all grim commands
+
+### `command list`
+
+List all registered grim commands
+
+### `command show`
+
+Show parameters for a grim command
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `--name` | yes | Command name. Positional |
+
+## completion
+
+### `completion bash`
+
+Generate bash completion script for the grim binary
+
+## deps
+
+### `deps`
+
+List all external dependencies across grim modules
+
 ## entra
 
-### `entra_app_list`
+### `entra app list`
 
 List Entra app registrations with their permissions
 
-### `entra_license`
+### `entra license`
 
 List Entra license information
 
-### `entra_license_plan_list`
+### `entra license plan list`
 
 List service plans across all subscribed Entra SKUs
 
-### `entra_permission_list`
+### `entra permission list`
 
 List Microsoft Graph OAuth permission scopes
 
-### `entra_user_list`
+### `entra user list`
 
 List Entra users with license and MFA info
 
@@ -115,7 +145,7 @@ List Entra users with license and MFA info
 
 ## export
 
-### `export_excel`
+### `export excel`
 
 Convert TSV input to a formatted Excel (.xlsx) file
 
@@ -126,7 +156,7 @@ Convert TSV input to a formatted Excel (.xlsx) file
 
 ## git
 
-### `git_pull`
+### `git pull`
 
 Pull from remote if directory is a git repo
 
@@ -134,7 +164,7 @@ Pull from remote if directory is a git repo
 | --- | --- | --- |
 | `--path` |  | Path to git repository. Default: `.`. Positional |
 
-### `git_push`
+### `git push`
 
 Stage, commit, and push changes
 
@@ -143,7 +173,7 @@ Stage, commit, and push changes
 | `--message` | yes | Commit message |
 | `--path` |  | Path to git repository. Default: `.`. Positional |
 
-### `git_status`
+### `git status`
 
 Show status of files in a git repo
 
@@ -151,7 +181,7 @@ Show status of files in a git repo
 | --- | --- | --- |
 | `--path` |  | Path to git repository. Default: `.`. Positional |
 
-### `git_sync`
+### `git sync`
 
 Pull then commit and push changes
 
@@ -160,31 +190,9 @@ Pull then commit and push changes
 | `--message` | yes | Commit message |
 | `--path` |  | Path to git repository. Default: `.`. Positional |
 
-## grim
-
-### `grim_command_docs`
-
-Generate markdown documentation for all grim commands
-
-### `grim_command_list`
-
-List all registered grim commands
-
-### `grim_command_show`
-
-Show parameters for a grim command
-
-| Parameter | Required | Description |
-| --- | --- | --- |
-| `--name` | yes | Command name. Positional |
-
-### `grim_deps`
-
-List all external dependencies across grim modules
-
 ## json
 
-### `json_append`
+### `json append`
 
 Append a JSON object to an array in a file
 
@@ -193,11 +201,11 @@ Append a JSON object to an array in a file
 | `--file` | yes | JSON file (created if missing) |
 | `--item` | yes | JSON object to append |
 
-### `json_build`
+### `json build`
 
 Build a JSON object from key=value arguments
 
-### `json_find`
+### `json find`
 
 Find first matching item in a JSON array
 
@@ -208,7 +216,7 @@ Find first matching item in a JSON array
 | `--return` |  | Field to return (omit for whole object) |
 | `--where` | yes | Field to match on |
 
-### `json_get`
+### `json get`
 
 Get a single value from JSON by path
 
@@ -216,7 +224,7 @@ Get a single value from JSON by path
 | --- | --- | --- |
 | `--path` | yes | Dotted path to the value. Positional |
 
-### `json_kv`
+### `json kv`
 
 Flatten a JSON object to key/value rows
 
@@ -224,7 +232,7 @@ Flatten a JSON object to key/value rows
 | --- | --- | --- |
 | `--path` |  | Dotted path to the object. Default: `.`. Positional |
 
-### `json_remove`
+### `json remove`
 
 Remove matching items from a JSON array in a file
 
@@ -234,7 +242,7 @@ Remove matching items from a JSON array in a file
 | `--match` | yes | Field to match on |
 | `--value` | yes | Value to match for removal |
 
-### `json_set`
+### `json set`
 
 Set a key/value in a JSON file
 
@@ -244,7 +252,7 @@ Set a key/value in a JSON file
 | `--key` | yes | Key to set |
 | `--value` | yes | Value to set |
 
-### `json_tsv`
+### `json tsv`
 
 Extract fields from a JSON array as TSV
 
@@ -255,19 +263,19 @@ Extract fields from a JSON array as TSV
 
 ## ms365
 
-### `ms365_app_setup`
+### `ms365 app setup`
 
 Create or update the _grim app registration with required MS365 permissions
 
-### `ms365_app_show`
+### `ms365 app show`
 
 Show the _grim app registration and its permissions
 
-### `ms365_login`
+### `ms365 login`
 
 Authenticate with the _grim app using device code flow
 
-### `ms365_purview_rlabel_add`
+### `ms365 purview rlabel add`
 
 Create a new Purview retention label
 
@@ -280,11 +288,11 @@ Create a new Purview retention label
 | `--name` | yes | Label display name. Positional |
 | `--trigger` |  | Retention trigger (dateLabeled, dateCreated, dateModified, dateOfEvent) |
 
-### `ms365_purview_rlabel_list`
+### `ms365 purview rlabel list`
 
 List Purview retention labels
 
-### `ms365_purview_rlabel_show`
+### `ms365 purview rlabel show`
 
 Show details of a Purview retention label
 
@@ -292,7 +300,7 @@ Show details of a Purview retention label
 | --- | --- | --- |
 | `--name` | yes | Label display name (exact match). Positional |
 
-### `ms365_purview_slabel_add`
+### `ms365 purview slabel add`
 
 Create a new Purview sensitive information label
 
@@ -304,11 +312,11 @@ Create a new Purview sensitive information label
 | `--parent` |  | Parent label name (makes this a sublabel) |
 | `--tooltip` |  | Tooltip shown to users |
 
-### `ms365_purview_slabel_list`
+### `ms365 purview slabel list`
 
 List Purview sensitive information labels
 
-### `ms365_purview_slabel_show`
+### `ms365 purview slabel show`
 
 Show details of a Purview sensitive information label
 
@@ -318,7 +326,7 @@ Show details of a Purview sensitive information label
 
 ## nmap
 
-### `nmap_scan_discover`
+### `nmap scan discover`
 
 Network discovery (ping sweep)
 
@@ -326,7 +334,7 @@ Network discovery (ping sweep)
 | --- | --- | --- |
 | `--subnet` | yes | Subnet to scan. Positional |
 
-### `nmap_scan_full`
+### `nmap scan full`
 
 Full port scan (all 65535 ports)
 
@@ -334,7 +342,7 @@ Full port scan (all 65535 ports)
 | --- | --- | --- |
 | `--target` | yes | Target host or IP. Positional |
 
-### `nmap_scan_os`
+### `nmap scan os`
 
 OS detection (requires root)
 
@@ -342,7 +350,7 @@ OS detection (requires root)
 | --- | --- | --- |
 | `--target` | yes | Target host or IP. Positional |
 
-### `nmap_scan_quick`
+### `nmap scan quick`
 
 Quick scan of common ports
 
@@ -350,7 +358,7 @@ Quick scan of common ports
 | --- | --- | --- |
 | `--target` | yes | Target host or IP. Positional |
 
-### `nmap_scan_services`
+### `nmap scan services`
 
 Service and version detection
 
@@ -359,7 +367,7 @@ Service and version detection
 | `--ports` |  | Port range to scan |
 | `--target` | yes | Target host or IP. Positional |
 
-### `nmap_scan_stealth`
+### `nmap scan stealth`
 
 Stealth SYN scan
 
@@ -368,7 +376,7 @@ Stealth SYN scan
 | `--ports` |  | Port range to scan |
 | `--target` | yes | Target host or IP. Positional |
 
-### `nmap_scan_udp`
+### `nmap scan udp`
 
 UDP scan
 
@@ -377,7 +385,7 @@ UDP scan
 | `--ports` |  | Port range to scan. Default: `53,67,68,69,123,161,162,500,514,1900` |
 | `--target` | yes | Target host or IP. Positional |
 
-### `nmap_script_run`
+### `nmap script run`
 
 Run NSE script(s) against target
 
@@ -389,7 +397,7 @@ Run NSE script(s) against target
 
 ## note
 
-### `note_add`
+### `note add`
 
 Add a new note for today
 
@@ -397,7 +405,7 @@ Add a new note for today
 | --- | --- | --- |
 | `--message` | yes | The note text, supports #tags. Positional |
 
-### `note_delete`
+### `note delete`
 
 Delete a note by id
 
@@ -405,7 +413,7 @@ Delete a note by id
 | --- | --- | --- |
 | `--id` | yes | The note id to delete. Positional |
 
-### `note_list`
+### `note list`
 
 List notes for a given date
 
@@ -415,7 +423,7 @@ List notes for a given date
 
 ## openssl
 
-### `openssl_client_connect`
+### `openssl client connect`
 
 Connect to a TLS server and display certificate info
 
@@ -425,7 +433,7 @@ Connect to a TLS server and display certificate info
 | `--message` |  | Message to send after connect |
 | `--port` |  | Target port. Default: `443` |
 
-### `openssl_file_decrypt`
+### `openssl file decrypt`
 
 Decrypt a file
 
@@ -435,7 +443,7 @@ Decrypt a file
 | `--input` | yes | Input file to decrypt |
 | `--password` | yes | Decryption password |
 
-### `openssl_file_encrypt`
+### `openssl file encrypt`
 
 Encrypt a file using AES-256-CBC
 
@@ -447,7 +455,7 @@ Encrypt a file using AES-256-CBC
 
 ## tmux
 
-### `tmux_pane`
+### `tmux pane`
 
 Display piped input in a tmux split pane
 
@@ -456,7 +464,7 @@ Display piped input in a tmux split pane
 | `--horizontal` |  | Split horizontally instead of vertically |
 | `--size` |  | Pane size (rows/columns or percentage). Default: `40%` |
 
-### `tmux_popup`
+### `tmux popup`
 
 Display piped input in a floating tmux popup
 

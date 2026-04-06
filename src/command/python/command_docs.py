@@ -106,7 +106,8 @@ def format_list_tsv(commands):
     """Output command list as TSV with headers."""
     print("command,module,description")
     for cmd in sorted(commands.values(), key=lambda c: c["name"]):
-        print(f"{cmd['name']}\t{cmd['module']}\t{cmd['description']}")
+        display = cmd["name"].replace("_", " ")
+        print(f"{display}\t{cmd['module']}\t{cmd['description']}")
 
 
 def format_show_tsv(cmd):
@@ -123,9 +124,9 @@ def format_docs_md(commands, grim_bin="grim"):
     print(f"Grim is a bash CLI framework. Run commands using `{grim_bin}`:")
     print()
     print("```bash")
-    print(f"{grim_bin} nmap_scan_quick localhost")
-    print(f"{grim_bin} azure_graph_query my_query --output json")
-    print(f"{grim_bin} note_add \"my note #tag\"")
+    print(f"{grim_bin} nmap scan quick localhost")
+    print(f"{grim_bin} azure graph query my_query --output json")
+    print(f"{grim_bin} note add \"my note #tag\"")
     print("```")
     print()
 
@@ -139,7 +140,7 @@ def format_docs_md(commands, grim_bin="grim"):
         print()
 
         for cmd in sorted(modules[module], key=lambda c: c["name"]):
-            print(f"### `{cmd['name']}`")
+            print(f"### `{cmd['name'].replace('_', ' ')}`")
             print()
             if cmd["description"]:
                 print(cmd["description"])
@@ -193,10 +194,11 @@ def main():
     if args.format == "list":
         format_list_tsv(commands)
     elif args.format == "show":
-        if not args.command or args.command not in commands:
+        name = args.command.replace(" ", "_") if args.command else None
+        if not name or name not in commands:
             print(f"Unknown command: {args.command}", file=sys.stderr)
             sys.exit(1)
-        format_show_tsv(commands[args.command])
+        format_show_tsv(commands[name])
     elif args.format == "docs":
         format_docs_md(commands, args.grim_bin)
 
