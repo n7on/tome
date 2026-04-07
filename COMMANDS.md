@@ -1,11 +1,11 @@
-# Grim Commands
+# Tome Commands
 
-Grim is a bash CLI framework. Run commands using `grim`:
+Tome is a bash CLI framework. Run commands using `tome`:
 
 ```bash
-grim nmap scan quick localhost
-grim azure graph query my_query --output json
-grim note add "my note #tag"
+tome nmap scan quick localhost
+tome azure graph query my_query --output json
+tome note add "my note #tag"
 ```
 
 ## ado
@@ -91,15 +91,15 @@ Query Azure Log Analytics workspace using a saved KQL file
 
 ### `command docs`
 
-Generate markdown documentation for all grim commands
+Generate markdown documentation for all tome commands
 
 ### `command list`
 
-List all registered grim commands
+List all registered tome commands
 
 ### `command show`
 
-Show parameters for a grim command
+Show parameters for a tome command
 
 | Parameter | Required | Description |
 | --- | --- | --- |
@@ -109,13 +109,13 @@ Show parameters for a grim command
 
 ### `completion bash`
 
-Generate bash completion script for the grim binary
+Generate bash completion script for the tome binary
 
 ## deps
 
 ### `deps`
 
-List all external dependencies across grim modules
+List all external dependencies across tome modules
 
 ## entra
 
@@ -265,15 +265,15 @@ Extract fields from a JSON array as TSV
 
 ### `ms365 app setup`
 
-Create or update the _grim app registration with required MS365 permissions
+Create or update the _tome app registration with required MS365 permissions
 
 ### `ms365 app show`
 
-Show the _grim app registration and its permissions
+Show the _tome app registration and its permissions
 
 ### `ms365 login`
 
-Authenticate with the _grim app using device code flow
+Authenticate with the _tome app using device code flow
 
 ### `ms365 purview rlabel add`
 
@@ -471,7 +471,7 @@ Display piped input in a floating tmux popup
 | Parameter | Required | Description |
 | --- | --- | --- |
 | `--height` |  | Popup height (rows or percentage). Default: `60%` |
-| `--title` |  | Popup title. Default: `grim` |
+| `--title` |  | Popup title. Default: `tome` |
 | `--width` |  | Popup width (columns or percentage). Default: `80%` |
 
 ## Framework Parameters

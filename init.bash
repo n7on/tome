@@ -1,37 +1,39 @@
-_GRIM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-_GRIM_PYTHON="$_GRIM_DIR/.venv/bin/python3"
+_TOME_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_TOME_PYTHON="$_TOME_DIR/.venv/bin/python3"
 
-# Source grim utilities first (dependencies)
-for _grim_file in "$_GRIM_DIR/src/_grim"/*.bash; do
-    source "$_grim_file"
+# Source tome utilities first (all _* dirs, in sorted order)
+for _tome_dir in "$_TOME_DIR/src"/_*/; do
+    for _tome_file in "$_tome_dir"*.bash; do
+        [[ -f "$_tome_file" ]] && source "$_tome_file"
+    done
 done
 
-# Source command modules from core and any GRIM_PATH entries
-_grim_load_modules() {
-    local _grim_src="$1"
-    for _grim_dir in "$_grim_src"/*; do
-        [[ -d "$_grim_dir" && "$(basename "$_grim_dir")" != "_grim" ]] || continue
-        for _grim_file in "$_grim_dir"/*.bash; do
-            [[ -f "$_grim_file" ]] && source "$_grim_file"
+# Source command modules from core and any TOME_PATH entries
+_tome_load_modules() {
+    local _tome_src="$1"
+    for _tome_dir in "$_tome_src"/*; do
+        [[ -d "$_tome_dir" && "$(basename "$_tome_dir")" != _* ]] || continue
+        for _tome_file in "$_tome_dir"/*.bash; do
+            [[ -f "$_tome_file" ]] && source "$_tome_file"
         done
     done
 }
 
-_grim_load_modules "$_GRIM_DIR/src"
+_tome_load_modules "$_TOME_DIR/src"
 
-if [[ -n "${GRIM_PATH:-}" ]]; then
-    IFS=: read -ra _grim_paths <<< "$GRIM_PATH"
-    for _grim_path in "${_grim_paths[@]}"; do
-        [[ -d "$_grim_path" ]] && _grim_load_modules "$_grim_path"
+if [[ -n "${TOME_PATH:-}" ]]; then
+    IFS=: read -ra _tome_paths <<< "$TOME_PATH"
+    for _tome_path in "${_tome_paths[@]}"; do
+        [[ -d "$_tome_path" ]] && _tome_load_modules "$_tome_path"
     done
-    unset _grim_paths _grim_path
+    unset _tome_paths _tome_path
 fi
 
-unset -f _grim_load_modules
+unset -f _tome_load_modules
 
-# Source user extensions from ~/.grim/
-for _grim_file in "$HOME/.grim"/*.bash; do
-    [[ -f "$_grim_file" ]] && source "$_grim_file"
+# Source user extensions from ~/.tome/
+for _tome_file in "$HOME/.tome"/*.bash; do
+    [[ -f "$_tome_file" ]] && source "$_tome_file"
 done
 
-unset _grim_dir _grim_file
+unset _tome_dir _tome_file

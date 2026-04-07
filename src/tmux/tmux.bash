@@ -4,11 +4,11 @@
 # Usage: some_command | tmux_popup
 #        some_command | tmux_popup --title "My Output" --width 80% --height 60%
 tmux_popup() {
-    _grim_command_requires tmux || return 1
-    _grim_command_param title --default "grim" --help "Popup title"
-    _grim_command_param width --default "80%" --help "Popup width (columns or percentage)"
-    _grim_command_param height --default "60%" --help "Popup height (rows or percentage)"
-    _grim_command_param_parse "$@" || return 1
+    _requires tmux || return 1
+    _param title --default "tome" --help "Popup title"
+    _param width --default "80%" --help "Popup width (columns or percentage)"
+    _param height --default "60%" --help "Popup height (rows or percentage)"
+    _param_parse "$@" || return 1
 
     local tmp
     tmp=$(mktemp)
@@ -16,7 +16,7 @@ tmux_popup() {
 
     if [[ ! -s "$tmp" ]]; then
         rm -f "$tmp"
-        _grim_message_warn "No input to display"
+        _message_warn "No input to display"
         return 1
     fi
 
@@ -27,10 +27,10 @@ tmux_popup() {
 # Usage: some_command | tmux_pane
 #        some_command | tmux_pane --size 40% --horizontal
 tmux_pane() {
-    _grim_command_requires tmux || return 1
-    _grim_command_param size --default "40%" --help "Pane size (rows/columns or percentage)"
-    _grim_command_param horizontal --help "Split horizontally instead of vertically"
-    _grim_command_param_parse "$@" || return 1
+    _requires tmux || return 1
+    _param size --default "40%" --help "Pane size (rows/columns or percentage)"
+    _param horizontal --help "Split horizontally instead of vertically"
+    _param_parse "$@" || return 1
 
     local tmp
     tmp=$(mktemp)
@@ -38,7 +38,7 @@ tmux_pane() {
 
     if [[ ! -s "$tmp" ]]; then
         rm -f "$tmp"
-        _grim_message_warn "No input to display"
+        _message_warn "No input to display"
         return 1
     fi
 
@@ -49,5 +49,5 @@ tmux_pane() {
     "${cmd[@]}"
 }
 
-_grim_command_complete_params "tmux_popup" "Display piped input in a floating tmux popup" "title" "width" "height"
-_grim_command_complete_params "tmux_pane" "Display piped input in a tmux split pane" "size" "horizontal"
+_complete_params "tmux_popup" "Display piped input in a floating tmux popup" "title" "width" "height"
+_complete_params "tmux_pane" "Display piped input in a tmux split pane" "size" "horizontal"

@@ -1,9 +1,9 @@
-# Cache management for grim commands
-_GRIM_CACHE_DIR="${HOME}/.grim/.cache"
+# Cache management for tome commands
+_CACHE_DIR="${HOME}/.tome/.cache"
 
 # Generate a cache key from arguments
-# Usage: _grim_cache_key "func_name" "arg1" "arg2"
-_grim_cache_key() {
+# Usage: _cache_key "func_name" "arg1" "arg2"
+_cache_key() {
     local IFS=$'\x1f'
     if command -v md5sum &>/dev/null; then
         echo -n "$*" | md5sum | cut -d' ' -f1
@@ -13,15 +13,15 @@ _grim_cache_key() {
 }
 
 # Wrap a command with caching support
-# Usage: _grim_cache_wrap <ttl> command arg1 arg2
-_GRIM_CACHE_DEFAULT_TTL=300
+# Usage: _cache_wrap <ttl> command arg1 arg2
+_CACHE_DEFAULT_TTL=300
 
-_grim_cache_wrap() {
+_cache_wrap() {
     local cache_ttl="${1:-0}"
     shift
 
     # --cache without a value is parsed as "true"; use default TTL
-    [[ "$cache_ttl" == "true" ]] && cache_ttl="$_GRIM_CACHE_DEFAULT_TTL"
+    [[ "$cache_ttl" == "true" ]] && cache_ttl="$_CACHE_DEFAULT_TTL"
 
     if [[ "$cache_ttl" -le 0 ]]; then
         "$@"
@@ -29,10 +29,10 @@ _grim_cache_wrap() {
     fi
 
     local key
-    key=$(_grim_cache_key "${FUNCNAME[2]}" "$@")
-    local cache_file="${_GRIM_CACHE_DIR}/${key}"
+    key=$(_cache_key "${FUNCNAME[2]}" "$@")
+    local cache_file="${_CACHE_DIR}/${key}"
 
-    mkdir -p "$_GRIM_CACHE_DIR"
+    mkdir -p "$_CACHE_DIR"
 
     if [[ -f "$cache_file" ]]; then
         local mtime

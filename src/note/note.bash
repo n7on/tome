@@ -4,8 +4,8 @@ _NOTE_DIR="$HOME/.notes"
 
 # Add a new note for today
 note_add() {
-    _grim_command_param message --positional --required --help "The note text, supports #tags"
-    _grim_command_param_parse "$@" || return 1
+    _param message --positional --required --help "The note text, supports #tags"
+    _param_parse "$@" || return 1
 
     mkdir -p "$_NOTE_DIR"
     git_pull --path "$_NOTE_DIR"
@@ -32,27 +32,27 @@ note_add() {
 
 # List notes for a given date (defaults to today)
 note_list() {
-    _grim_command_param date --default "$(date +%Y-%m-%d)" --positional --help "Date to list notes for"
-    _grim_command_param_parse "$@" || return 1
+    _param date --default "$(date +%Y-%m-%d)" --positional --help "Date to list notes for"
+    _param_parse "$@" || return 1
 
     git_pull --path "$_NOTE_DIR"
 
     local file="$_NOTE_DIR/${date}.json"
 
     if [[ ! -f "$file" ]]; then
-        _grim_message_warn "No notes found for $date"
+        _message_warn "No notes found for $date"
         return 0
     fi
 
     cat "$file" \
         | json_tsv --path '.' --fields 'id,timestamp,message' \
-        | _grim_command_output_render
+        | _output_render
 }
 
 # Delete a note by id
 note_delete() {
-    _grim_command_param id --positional --required --help "The note id to delete"
-    _grim_command_param_parse "$@" || return 1
+    _param id --positional --required --help "The note id to delete"
+    _param_parse "$@" || return 1
 
     git_pull --path "$_NOTE_DIR"
 
@@ -68,7 +68,7 @@ note_delete() {
     done
 
     if [[ $found -eq 0 ]]; then
-        _grim_message_error "Note not found: $id"
+        _message_error "Note not found: $id"
         return 1
     fi
 
@@ -85,7 +85,7 @@ _note_complete_dates() {
 }
 
 # Register completions
-_grim_command_complete_params "note_add" "Add a new note for today" "message"
-_grim_command_complete_params "note_list" "List notes for a given date" "date"
-_grim_command_complete_params "note_delete" "Delete a note by id" "id"
-_grim_command_complete_func "note_list" "date" _note_complete_dates
+_complete_params "note_add" "Add a new note for today" "message"
+_complete_params "note_list" "List notes for a given date" "date"
+_complete_params "note_delete" "Delete a note by id" "id"
+_complete_func "note_list" "date" _note_complete_dates

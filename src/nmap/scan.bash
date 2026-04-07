@@ -1,47 +1,47 @@
 # Quick scan of common ports
 nmap_scan_quick() {
-    _grim_command_requires nmap || return 1
-    _grim_command_param target --required --positional --help "Target host or IP"
-    _grim_command_param_parse "$@" || return 1
+    _requires nmap || return 1
+    _param target --required --positional --help "Target host or IP"
+    _param_parse "$@" || return 1
 
-    _grim_command_exec nmap -T4 --top-ports 1000 "$target" \
+    _exec nmap -T4 --top-ports 1000 "$target" \
         | awk '/^[0-9]+\//{printf "%s\t%s\t%s\n", $1, $2, $3}' \
-        | _grim_command_output_render "port,state,service"
+        | _output_render "port,state,service"
 }
 
 # Full port scan (all 65535 ports)
 nmap_scan_full() {
-    _grim_command_requires nmap || return 1
-    _grim_command_param target --required --positional --help "Target host or IP"
-    _grim_command_param_parse "$@" || return 1
+    _requires nmap || return 1
+    _param target --required --positional --help "Target host or IP"
+    _param_parse "$@" || return 1
 
-    _grim_command_exec nmap -T4 -p- "$target" \
+    _exec nmap -T4 -p- "$target" \
         | awk '/^[0-9]+\//{printf "%s\t%s\t%s\n", $1, $2, $3}' \
-        | _grim_command_output_render "port,state,service"
+        | _output_render "port,state,service"
 }
 
 # Service and version detection
 nmap_scan_services() {
-    _grim_command_requires nmap || return 1
-    _grim_command_param target --required --positional --help "Target host or IP"
-    _grim_command_param ports --help "Port range to scan"
-    _grim_command_param_parse "$@" || return 1
+    _requires nmap || return 1
+    _param target --required --positional --help "Target host or IP"
+    _param ports --help "Port range to scan"
+    _param_parse "$@" || return 1
 
     local cmd=(nmap -sV -sC "$target")
     [[ -n "$ports" ]] && cmd+=(-p "$ports")
 
-    _grim_command_exec "${cmd[@]}" \
+    _exec "${cmd[@]}" \
         | awk '/^[0-9]+\//{printf "%s\t%s\t%s\t%s\n", $1, $2, $3, substr($0, index($0,$4))}' \
-        | _grim_command_output_render "port,state,service,version"
+        | _output_render "port,state,service,version"
 }
 
 # OS detection (requires root)
 nmap_scan_os() {
-    _grim_command_requires nmap || return 1
-    _grim_command_param target --required --positional --help "Target host or IP"
-    _grim_command_param_parse "$@" || return 1
+    _requires nmap || return 1
+    _param target --required --positional --help "Target host or IP"
+    _param_parse "$@" || return 1
 
-    _grim_command_exec sudo nmap -O "$target" \
+    _exec sudo nmap -O "$target" \
         | awk '/^(OS|Running|Device|Network)/{
             split($0, a, ":")
             gsub(/^[ \t]+|[ \t]+$/, "", a[1])
@@ -50,45 +50,45 @@ nmap_scan_os() {
             gsub(/^[ \t]+|[ \t]+$/, "", val)
             print a[1] "\t" val
         }' \
-        | _grim_command_output_render "type,details"
+        | _output_render "type,details"
 }
 
 # Network discovery (ping sweep)
 nmap_scan_discover() {
-    _grim_command_requires nmap || return 1
-    _grim_command_param subnet --required --positional --help "Subnet to scan"
-    _grim_command_param_parse "$@" || return 1
+    _requires nmap || return 1
+    _param subnet --required --positional --help "Subnet to scan"
+    _param_parse "$@" || return 1
 
-    _grim_command_exec nmap -sn "$subnet" \
+    _exec nmap -sn "$subnet" \
         | awk '/Nmap scan report for/{host=$5} /Host is up/{printf "%s\t%s\n", host, "up"}' \
-        | _grim_command_output_render "host,status"
+        | _output_render "host,status"
 }
 
 # Stealth SYN scan
 nmap_scan_stealth() {
-    _grim_command_requires nmap || return 1
-    _grim_command_param target --required --positional --help "Target host or IP"
-    _grim_command_param ports --help "Port range to scan"
-    _grim_command_param_parse "$@" || return 1
+    _requires nmap || return 1
+    _param target --required --positional --help "Target host or IP"
+    _param ports --help "Port range to scan"
+    _param_parse "$@" || return 1
 
     local cmd=(sudo nmap -sS -T2 "$target")
     [[ -n "$ports" ]] && cmd+=(-p "$ports")
 
-    _grim_command_exec "${cmd[@]}" \
+    _exec "${cmd[@]}" \
         | awk '/^[0-9]+\//{printf "%s\t%s\t%s\n", $1, $2, $3}' \
-        | _grim_command_output_render "port,state,service"
+        | _output_render "port,state,service"
 }
 
 # UDP scan
 nmap_scan_udp() {
-    _grim_command_requires nmap || return 1
-    _grim_command_param target --required --positional --help "Target host or IP"
-    _grim_command_param ports --default "53,67,68,69,123,161,162,500,514,1900" --help "Port range to scan"
-    _grim_command_param_parse "$@" || return 1
+    _requires nmap || return 1
+    _param target --required --positional --help "Target host or IP"
+    _param ports --default "53,67,68,69,123,161,162,500,514,1900" --help "Port range to scan"
+    _param_parse "$@" || return 1
 
-    _grim_command_exec sudo nmap -sU -p "$ports" "$target" \
+    _exec sudo nmap -sU -p "$ports" "$target" \
         | awk '/^[0-9]+\//{printf "%s\t%s\t%s\n", $1, $2, $3}' \
-        | _grim_command_output_render "port,state,service"
+        | _output_render "port,state,service"
 }
 
 _nmap_complete_targets() {
@@ -106,17 +106,17 @@ _nmap_complete_targets() {
 }
 
 # Register completions
-_grim_command_complete_params "nmap_scan_quick" "Quick scan of common ports" "target"
-_grim_command_complete_params "nmap_scan_full" "Full port scan (all 65535 ports)" "target"
-_grim_command_complete_params "nmap_scan_services" "Service and version detection" "target" "ports"
-_grim_command_complete_params "nmap_scan_os" "OS detection (requires root)" "target"
-_grim_command_complete_params "nmap_scan_discover" "Network discovery (ping sweep)" "subnet"
-_grim_command_complete_params "nmap_scan_stealth" "Stealth SYN scan" "target" "ports"
-_grim_command_complete_params "nmap_scan_udp" "UDP scan" "target" "ports"
-_grim_command_complete_func "nmap_scan_quick" "target" _nmap_complete_targets
-_grim_command_complete_func "nmap_scan_full" "target" _nmap_complete_targets
-_grim_command_complete_func "nmap_scan_services" "target" _nmap_complete_targets
-_grim_command_complete_func "nmap_scan_os" "target" _nmap_complete_targets
-_grim_command_complete_func "nmap_scan_discover" "subnet" _nmap_complete_targets
-_grim_command_complete_func "nmap_scan_stealth" "target" _nmap_complete_targets
-_grim_command_complete_func "nmap_scan_udp" "target" _nmap_complete_targets
+_complete_params "nmap_scan_quick" "Quick scan of common ports" "target"
+_complete_params "nmap_scan_full" "Full port scan (all 65535 ports)" "target"
+_complete_params "nmap_scan_services" "Service and version detection" "target" "ports"
+_complete_params "nmap_scan_os" "OS detection (requires root)" "target"
+_complete_params "nmap_scan_discover" "Network discovery (ping sweep)" "subnet"
+_complete_params "nmap_scan_stealth" "Stealth SYN scan" "target" "ports"
+_complete_params "nmap_scan_udp" "UDP scan" "target" "ports"
+_complete_func "nmap_scan_quick" "target" _nmap_complete_targets
+_complete_func "nmap_scan_full" "target" _nmap_complete_targets
+_complete_func "nmap_scan_services" "target" _nmap_complete_targets
+_complete_func "nmap_scan_os" "target" _nmap_complete_targets
+_complete_func "nmap_scan_discover" "subnet" _nmap_complete_targets
+_complete_func "nmap_scan_stealth" "target" _nmap_complete_targets
+_complete_func "nmap_scan_udp" "target" _nmap_complete_targets

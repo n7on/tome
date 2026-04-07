@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-_GRIM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-_GRIM_USER_DIR="$HOME/.grim"
+_TOME_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_TOME_USER_DIR="$HOME/.tome"
 
 # Check for python3
 if ! command -v python3 &>/dev/null; then
@@ -16,19 +16,19 @@ if ! python3 -c "import ensurepip" &>/dev/null; then
     exit 1
 fi
 
-# Create ~/.grim/ if needed
-if [[ ! -d "$_GRIM_USER_DIR" ]]; then
-    echo "Creating $_GRIM_USER_DIR..."
-    mkdir -p "$_GRIM_USER_DIR"
+# Create ~/.tome/ if needed
+if [[ ! -d "$_TOME_USER_DIR" ]]; then
+    echo "Creating $_TOME_USER_DIR..."
+    mkdir -p "$_TOME_USER_DIR"
 fi
 
 # Create/update virtualenv and install Python dependencies
 echo "Installing Python dependencies..."
-python3 -m venv "$_GRIM_DIR/.venv"
-"$_GRIM_DIR/.venv/bin/pip" install --quiet --disable-pip-version-check "$_GRIM_DIR"
+python3 -m venv "$_TOME_DIR/.venv"
+"$_TOME_DIR/.venv/bin/pip" install --quiet --disable-pip-version-check "$_TOME_DIR"
 
 echo ""
 echo "Setup complete. Add the following to your .bashrc:"
 echo ""
-echo "  export PATH=\"$_GRIM_DIR/bin:\$PATH\""
-echo "  source <(grim completion bash)"
+echo "  export PATH=\"$_TOME_DIR/bin:\$PATH\""
+echo "  source <(tome completion bash)"

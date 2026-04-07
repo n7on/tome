@@ -1,6 +1,6 @@
 
 _azure_graph_queries_dir="$(dirname "${BASH_SOURCE[0]}")/kql/graph"
-_azure_graph_user_queries_dir="$HOME/.grim/kql/azure/graph"
+_azure_graph_user_queries_dir="$HOME/.tome/kql/azure/graph"
 
 _azure_graph_get_query_names() {
     local -A seen
@@ -17,7 +17,7 @@ _azure_graph_get_query_names() {
         done < <(find "$dir" -name "*.kql" -printf "%P\n" 2>/dev/null)
     done
 
-    _grim_command_complete_filter "${names[*]}" "$1"
+    _complete_filter "${names[*]}" "$1"
 }
 
 _azure_graph_load_query() {
@@ -33,15 +33,15 @@ _azure_graph_load_query() {
         fi
     done
 
-    _grim_message_error "Query '$name' not found"
+    _message_error "Query '$name' not found"
     return 1
 }
 
 azure_graph_query() {
-    _grim_command_requires az || return 1
-    _grim_command_param name          --required --positional --help "Query name (from queries/graph/)"
-    _grim_command_param subscriptions --help "Comma-separated list of subscription IDs to scope the query"
-    _grim_command_param_parse "$@" || return 1
+    _requires az || return 1
+    _param name          --required --positional --help "Query name (from queries/graph/)"
+    _param subscriptions --help "Comma-separated list of subscription IDs to scope the query"
+    _param_parse "$@" || return 1
 
     local kql
     kql=$(_azure_graph_load_query "$name") || return 1
@@ -53,14 +53,14 @@ azure_graph_query() {
     fi
 
     local result
-    result=$(_grim_command_exec "${cmd[@]}") || { _grim_message_error "Graph query failed"; return 1; }
+    result=$(_exec "${cmd[@]}") || { _message_error "Graph query failed"; return 1; }
 
     echo "$result" \
         | json_tsv --path 'data' --fields 'name,resource_group=resourceGroup,location,kind,subscription_id=subscriptionId' \
-        | _grim_command_output_render
+        | _output_render
 }
 
 # Register completions
-_grim_command_complete_params "azure_graph_query" "Query Azure Resource Graph using a saved KQL file" "name" "subscriptions"
-_grim_command_complete_func "azure_graph_query" "name" _azure_graph_get_query_names
-_grim_command_complete_func "azure_graph_query" "subscriptions" _azure_account_get_subscriptions
+_complete_params "azure_graph_query" "Query Azure Resource Graph using a saved KQL file" "name" "subscriptions"
+_complete_func "azure_graph_query" "name" _azure_graph_get_query_names
+_complete_func "azure_graph_query" "subscriptions" _azure_account_get_subscriptions

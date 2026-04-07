@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+# Wrapper to run tome commands
+# Usage: tome <command> [args...]
+#        tome nmap scan quick localhost
+
+_TOME_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_TOME_PYTHON="$_TOME_DIR/.venv/bin/python3"
+
+# Built-in: tome __complete <prefix> <prev> <cur>
+if [[ "${1:-}" == "__complete" ]]; then
+    _prefix="${2:-}"
+    _prev="${3:-}"
+    _cur="${4:-}"
+
+    # Top-level: list namespaces from directory names, no sourcing needed
+    if [[ -z "$_prefix" ]]; then
+        for _dir in "$_TOME_DIR/src"/*/; do
+            _base="$(basename "$_dir")"
+            [[ "$_base" == _* ]] && continue
+            echo "$_base"
+        done
+        exit 0
+    fi
+
+    # Source framework files
+    for _dir in "$_TOME_DIR/src"/_*/; do
+        for _file in "$_dir"*.bash; do
+            [[ -f "$_file" ]] && source "$_file"
+        done
+    done
+
+    # Source only the relevant namespace module
+    _namespace="${_prefix%%_*}"
+    if [[ -d "$_TOME_DIR/src/$_namespace" ]]; then
+        for _file in "$_TOME_DIR/src/$_namespace"/*.bash; do
+            [[ -f "$_file" ]] && source "$_file"
+        done
+    fi
+
+    # Prev is a flag: return value or dynamic completions
+    if [[ "$_prev" == --* ]]; then
+        if [[ -v _COMPLETER_FUNCS["${_prefix}:${_prev}"] ]]; then
+            "${_COMPLETER_FUNCS[${_prefix}:${_prev}]}" "$_cur"
+        elif [[ -v _COMPLETERS["${_prefix}:${_prev}"] ]]; then
+            echo "${_COMPLETERS[${_prefix}:${_prev}]}"
+        fi
+        exit 0
+    fi
+
+    # Prefix is a known command: return its flags
+    if declare -F "$_prefix" &>/dev/null; then
+        for _key in "${!_PARAMS[@]}"; do
+            [[ "$_key" == "${_prefix}:"* ]] || continue
+            echo "--${_key##*:}"
+        done
+        exit 0
+    fi
+
+    # Return next subcommand words for this prefix
+    for _key in "${!_PARAMS[@]}"; do
+        _cmd="${_key%%:*}"
+        [[ "$_cmd" == _* ]] && continue
+        [[ "$_cmd" == "${_prefix}_"* ]] || continue
+        _rest="${_cmd#${_prefix}_}"
+        echo "${_rest%%_*}"
+    done | sort -u
+
+    exit 0
+fi
+
+source "$_TOME_DIR/init.bash"
+
+# Built-in: tome completion bash
+if [[ "${1:-}" == "completion" && "${2:-}" == "bash" ]]; then
+    completion_bash
+    exit $?
+fi
+
+if [[ "${1:-}" == "completion" && "${2:-}" == "zsh" ]]; then
+    completion_zsh
+    exit $?
+fi
+
+# Collect non-flag leading words to form the command name
+parts=()
+for arg in "$@"; do
+    [[ "$arg" == -* ]] && break
+    parts+=("$arg")
+done
+
+# Try longest match first (nmap scan quick → nmap_scan_quick)
+cmd="" cmd_len=0
+for ((len=${#parts[@]}; len>=1; len--)); do
+    candidate="${parts[0]}"
+    for ((i=1; i<len; i++)); do
+        candidate="${candidate}_${parts[$i]}"
+    done
+    if declare -F "$candidate" &>/dev/null; then
+        cmd="$candidate"
+        cmd_len=$len
+        break
+    fi
+done
+
+if [[ -z "$cmd" ]]; then
+    echo "Unknown command: ${parts[*]}" >&2
+    echo "Run 'tome command list' for available commands" >&2
+    exit 1
+fi
+
+"$cmd" "${@:$((cmd_len + 1))}"

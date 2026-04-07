@@ -1,11 +1,11 @@
 # MS365 app registration and authentication
-# The "_grim" app supports both:
+# The "_tome" app supports both:
 #   - Application permissions (client credentials) — for APIs like sensitivity labels
 #   - Delegated permissions (device code flow) — for APIs needing user context
 
-_MS365_APP_NAME="_grim"
+_MS365_APP_NAME="_tome"
 _MS365_GRAPH_ID="00000003-0000-0000-c000-000000000000"
-_MS365_TOKEN_DIR="$HOME/.grim/ms365"
+_MS365_TOKEN_DIR="$HOME/.tome/ms365"
 _MS365_APP_TOKEN_FILE="$_MS365_TOKEN_DIR/.app_token"
 _MS365_USER_TOKEN_FILE="$_MS365_TOKEN_DIR/.user_token"
 
@@ -20,12 +20,12 @@ _MS365_DELEGATED_PERMISSIONS=(
 )
 
 ms365_app_setup() {
-    _grim_command_requires az || return 1
-    _grim_command_param_parse "$@" || return 1
+    _requires az || return 1
+    _param_parse "$@" || return 1
 
     local graph_sp
-    graph_sp=$(_grim_command_exec az ad sp show --id "$_MS365_GRAPH_ID" --output json) || {
-        _grim_message_error "Failed to fetch Microsoft Graph service principal"
+    graph_sp=$(_exec az ad sp show --id "$_MS365_GRAPH_ID" --output json) || {
+        _message_error "Failed to fetch Microsoft Graph service principal"
         return 1
     }
 
@@ -39,7 +39,7 @@ ms365_app_setup() {
     done
 
     local required_resource_access
-    required_resource_access=$(_grim_command_exec_python ms365 build_resource_access.py "$graph_sp" "${perm_specs[@]}") || return 1
+    required_resource_access=$(_exec_python ms365 build_resource_access.py "$graph_sp" "${perm_specs[@]}") || return 1
 
     # Create or update app
     local app app_id
@@ -47,39 +47,39 @@ ms365_app_setup() {
 
     if [[ -n "$app" ]]; then
         app_id=$(echo "$app" | json_get --path 'appId')
-        _grim_command_exec az ad app update --id "$app_id" \
+        _exec az ad app update --id "$app_id" \
             --required-resource-accesses "$required_resource_access" \
             --is-fallback-public-client true >/dev/null || {
-            _grim_message_error "Failed to update app '$_MS365_APP_NAME'"
+            _message_error "Failed to update app '$_MS365_APP_NAME'"
             return 1
         }
-        _grim_message_warn "Updated app '$_MS365_APP_NAME' ($app_id)"
+        _message_warn "Updated app '$_MS365_APP_NAME' ($app_id)"
     else
         local new_app
-        new_app=$(_grim_command_exec az ad app create \
+        new_app=$(_exec az ad app create \
             --display-name "$_MS365_APP_NAME" \
             --required-resource-accesses "$required_resource_access" \
             --is-fallback-public-client true \
             --output json) || {
-            _grim_message_error "Failed to create app '$_MS365_APP_NAME'"
+            _message_error "Failed to create app '$_MS365_APP_NAME'"
             return 1
         }
         app_id=$(echo "$new_app" | json_get --path 'appId')
-        _grim_message_warn "Created app '$_MS365_APP_NAME' ($app_id)"
+        _message_warn "Created app '$_MS365_APP_NAME' ($app_id)"
     fi
 
     # Ensure service principal exists
-    _grim_command_exec az ad sp create --id "$app_id" >/dev/null 2>&1 || true
+    _exec az ad sp create --id "$app_id" >/dev/null 2>&1 || true
 
     local sp_id graph_sp_id
-    sp_id=$(_grim_command_exec az ad sp show --id "$app_id" --query id -o tsv)
-    graph_sp_id=$(_grim_command_exec az ad sp show --id "$_MS365_GRAPH_ID" --query id -o tsv)
+    sp_id=$(_exec az ad sp show --id "$app_id" --query id -o tsv)
+    graph_sp_id=$(_exec az ad sp show --id "$_MS365_GRAPH_ID" --query id -o tsv)
 
     # Grant admin consent for application permissions (appRoleAssignments)
     for perm in "${_MS365_APP_PERMISSIONS[@]}"; do
         local role_id
         role_id=$(echo "$graph_sp" | json_find --path 'appRoles' --where 'value' --equals "$perm" --return 'id')
-        _grim_command_exec az rest --method POST \
+        _exec az rest --method POST \
             --url "https://graph.microsoft.com/v1.0/servicePrincipals/$sp_id/appRoleAssignments" \
             --body "{\"principalId\":\"$sp_id\",\"resourceId\":\"$graph_sp_id\",\"appRoleId\":\"$role_id\"}" \
             >/dev/null 2>&1 || true
@@ -95,34 +95,34 @@ ms365_app_setup() {
     done
 
     local existing_grant
-    existing_grant=$(_grim_command_exec az rest --method GET \
+    existing_grant=$(_exec az rest --method GET \
         --url "https://graph.microsoft.com/v1.0/oauth2PermissionGrants?\$filter=clientId eq '$sp_id' and resourceId eq '$graph_sp_id'" \
         | json_get --path 'value.0.id')
 
     if [[ -n "$existing_grant" ]]; then
-        _grim_command_exec az rest --method PATCH \
+        _exec az rest --method PATCH \
             --url "https://graph.microsoft.com/v1.0/oauth2PermissionGrants/$existing_grant" \
             --body "{\"scope\":\"${scope_ids}\"}" >/dev/null || {
-            _grim_message_error "Failed to grant admin consent (requires Global Admin or Privileged Role Admin)"
+            _message_error "Failed to grant admin consent (requires Global Admin or Privileged Role Admin)"
             return 1
         }
     else
-        _grim_command_exec az rest --method POST \
+        _exec az rest --method POST \
             --url "https://graph.microsoft.com/v1.0/oauth2PermissionGrants" \
             --body "{\"clientId\":\"$sp_id\",\"consentType\":\"AllPrincipals\",\"resourceId\":\"$graph_sp_id\",\"scope\":\"${scope_ids}\"}" \
             >/dev/null || {
-            _grim_message_error "Failed to grant admin consent (requires Global Admin or Privileged Role Admin)"
+            _message_error "Failed to grant admin consent (requires Global Admin or Privileged Role Admin)"
             return 1
         }
     fi
 
-    _grim_message_warn "Admin consent granted"
+    _message_warn "Admin consent granted"
 
     # Create client secret for application permissions
     local secret_result
-    secret_result=$(_grim_command_exec az ad app credential reset \
-        --id "$app_id" --display-name "grim" --output json) || {
-        _grim_message_error "Failed to create client secret"
+    secret_result=$(_exec az ad app credential reset \
+        --id "$app_id" --display-name "tome" --output json) || {
+        _message_error "Failed to create client secret"
         return 1
     }
 
@@ -135,35 +135,35 @@ ms365_app_setup() {
     json_build "app_id=$app_id" "secret=$secret" "tenant=$tenant" \
         > "$_MS365_TOKEN_DIR/app.json"
 
-    _grim_message_warn "Setup complete."
-    _grim_message_warn "  App permissions: ready (client credentials)"
-    _grim_message_warn "  Delegated permissions: run ms365_login to authenticate"
+    _message_warn "Setup complete."
+    _message_warn "  App permissions: ready (client credentials)"
+    _message_warn "  Delegated permissions: run ms365_login to authenticate"
 }
 
 ms365_app_show() {
-    _grim_command_requires az || return 1
-    _grim_command_param_parse "$@" || return 1
+    _requires az || return 1
+    _param_parse "$@" || return 1
 
     local app
     app=$(az ad app list --display-name "$_MS365_APP_NAME" --output json 2>/dev/null \
         | json_find --path '.' --where 'displayName' --equals "$_MS365_APP_NAME")
-    [[ -z "$app" ]] && { _grim_message_error "App '$_MS365_APP_NAME' not found. Run ms365_app_setup first."; return 1; }
+    [[ -z "$app" ]] && { _message_error "App '$_MS365_APP_NAME' not found. Run ms365_app_setup first."; return 1; }
 
     local graph_sp
-    graph_sp=$(_grim_command_exec az ad sp show --id "$_MS365_GRAPH_ID" --output json) || return 1
+    graph_sp=$(_exec az ad sp show --id "$_MS365_GRAPH_ID" --output json) || return 1
 
-    _grim_command_exec_python ms365 app_show.py "$app" "$graph_sp" \
-        | _grim_command_output_render
+    _exec_python ms365 app_show.py "$app" "$graph_sp" \
+        | _output_render
 }
 
 # --- Delegated auth (device code flow, user context) ---
 
 ms365_login() {
-    _grim_command_requires curl || return 1
-    _grim_command_param_parse "$@" || return 1
+    _requires curl || return 1
+    _param_parse "$@" || return 1
 
     local config="$_MS365_TOKEN_DIR/app.json"
-    [[ -f "$config" ]] || { _grim_message_error "App not configured. Run ms365_app_setup first."; return 1; }
+    [[ -f "$config" ]] || { _message_error "App not configured. Run ms365_app_setup first."; return 1; }
 
     local app_id tenant
     app_id=$(cat "$config" | json_get --path 'app_id')
@@ -191,7 +191,7 @@ ms365_login() {
         local err_msg
         err_msg=$(echo "$device_response" | json_get --path 'error_description')
         [[ "$err_msg" == "-" ]] && err_msg=$(echo "$device_response" | json_get --path 'error')
-        _grim_message_error "Failed to start device code flow: $err_msg"
+        _message_error "Failed to start device code flow: $err_msg"
         return 1
     fi
 
@@ -214,15 +214,15 @@ ms365_login() {
             slow_down) interval=$((interval + 5)); continue ;;
             "")
                 mkdir -p "$_MS365_TOKEN_DIR"
-                _grim_command_exec_python ms365 save_token.py "$token_response" "$_MS365_USER_TOKEN_FILE" --with-refresh
-                _grim_message_warn "Login successful"
+                _exec_python ms365 save_token.py "$token_response" "$_MS365_USER_TOKEN_FILE" --with-refresh
+                _message_warn "Login successful"
                 return 0
                 ;;
             *)
                 local err_msg
                 err_msg=$(echo "$token_response" | json_get --path 'error_description')
                 [[ "$err_msg" == "-" ]] && err_msg=$(echo "$token_response" | json_get --path 'error')
-                _grim_message_error "Login failed: $err_msg"
+                _message_error "Login failed: $err_msg"
                 return 1
                 ;;
         esac
@@ -232,8 +232,8 @@ ms365_login() {
 # Get a delegated (user) token, refreshing if needed
 _ms365_get_user_token() {
     local config="$_MS365_TOKEN_DIR/app.json"
-    [[ -f "$config" ]] || { _grim_message_error "App not configured. Run ms365_app_setup first."; return 1; }
-    [[ -f "$_MS365_USER_TOKEN_FILE" ]] || { _grim_message_error "Not logged in. Run ms365_login first."; return 1; }
+    [[ -f "$config" ]] || { _message_error "App not configured. Run ms365_app_setup first."; return 1; }
+    [[ -f "$_MS365_USER_TOKEN_FILE" ]] || { _message_error "Not logged in. Run ms365_login first."; return 1; }
 
     local expires_on
     expires_on=$(cat "$_MS365_USER_TOKEN_FILE" | json_get --path 'expires_on')
@@ -247,7 +247,7 @@ _ms365_get_user_token() {
     tenant=$(cat "$config" | json_get --path 'tenant')
     refresh_token=$(cat "$_MS365_USER_TOKEN_FILE" | json_get --path 'refresh_token')
 
-    [[ -z "$refresh_token" ]] && { _grim_message_error "Session expired. Run ms365_login to re-authenticate."; return 1; }
+    [[ -z "$refresh_token" ]] && { _message_error "Session expired. Run ms365_login to re-authenticate."; return 1; }
 
     local response
     response=$(curl -s -X POST \
@@ -259,12 +259,12 @@ _ms365_get_user_token() {
     local token
     token=$(echo "$response" | json_get --path 'access_token')
     if [[ -z "$token" ]]; then
-        _grim_message_error "Token refresh failed. Run ms365_login to re-authenticate."
+        _message_error "Token refresh failed. Run ms365_login to re-authenticate."
         rm -f "$_MS365_USER_TOKEN_FILE"
         return 1
     fi
 
-    _grim_command_exec_python ms365 save_token.py "$response" "$_MS365_USER_TOKEN_FILE" --with-refresh
+    _exec_python ms365 save_token.py "$response" "$_MS365_USER_TOKEN_FILE" --with-refresh
 
     echo "$token"
 }
@@ -274,7 +274,7 @@ _ms365_get_user_token() {
 # Get an application token using client credentials
 _ms365_get_app_token() {
     local config="$_MS365_TOKEN_DIR/app.json"
-    [[ -f "$config" ]] || { _grim_message_error "App not configured. Run ms365_app_setup first."; return 1; }
+    [[ -f "$config" ]] || { _message_error "App not configured. Run ms365_app_setup first."; return 1; }
 
     # Check cached token
     if [[ -f "$_MS365_APP_TOKEN_FILE" ]]; then
@@ -291,7 +291,7 @@ _ms365_get_app_token() {
     secret=$(cat "$config" | json_get --path 'secret')
     tenant=$(cat "$config" | json_get --path 'tenant')
 
-    [[ -z "$secret" ]] && { _grim_message_error "No client secret. Re-run ms365_app_setup."; return 1; }
+    [[ -z "$secret" ]] && { _message_error "No client secret. Re-run ms365_app_setup."; return 1; }
 
     local response
     response=$(curl -s -X POST \
@@ -307,12 +307,12 @@ _ms365_get_app_token() {
         local err_msg
         err_msg=$(echo "$response" | json_get --path 'error_description')
         [[ "$err_msg" == "-" ]] && err_msg=$(echo "$response" | json_get --path 'error')
-        _grim_message_error "Failed to get app token: $err_msg"
+        _message_error "Failed to get app token: $err_msg"
         return 1
     fi
 
     mkdir -p "$_MS365_TOKEN_DIR"
-    _grim_command_exec_python ms365 save_token.py "$response" "$_MS365_APP_TOKEN_FILE"
+    _exec_python ms365 save_token.py "$response" "$_MS365_APP_TOKEN_FILE"
 
     echo "$token"
 }
@@ -327,7 +327,7 @@ _ms365_graph_check() {
     if [[ -n "$error" && "$error" != "-" ]]; then
         local code
         code=$(echo "$response" | json_get --path 'error.code' 2>/dev/null)
-        _grim_message_error "$code: $error"
+        _message_error "$code: $error"
         return 1
     fi
 }
@@ -381,6 +381,6 @@ _ms365_graph_post_delegated() {
 }
 
 # Register completions
-_grim_command_complete_params "ms365_app_setup" "Create or update the _grim app registration with required MS365 permissions"
-_grim_command_complete_params "ms365_app_show" "Show the _grim app registration and its permissions"
-_grim_command_complete_params "ms365_login" "Authenticate with the _grim app using device code flow"
+_complete_params "ms365_app_setup" "Create or update the _tome app registration with required MS365 permissions"
+_complete_params "ms365_app_show" "Show the _tome app registration and its permissions"
+_complete_params "ms365_login" "Authenticate with the _tome app using device code flow"

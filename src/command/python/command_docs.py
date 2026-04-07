@@ -1,7 +1,7 @@
-"""Generate command documentation from grim source files.
+"""Generate command documentation from tome source files.
 
-Parses bash files for _grim_command_description, _grim_command_param,
-and _grim_command_complete_params calls to build command metadata.
+Parses bash files for _description, _param,
+and _complete_params calls to build command metadata.
 
 Usage:
     command_docs.py <src_dir> [--format table|json|md] [--command <name>]
@@ -18,8 +18,8 @@ def parse_source_files(src_dir):
     commands = {}
 
     for root, dirs, files in os.walk(src_dir):
-        # Skip _grim framework
-        if "/_grim" in root:
+        # Skip _* framework dirs
+        if os.path.basename(root).startswith("_"):
             continue
         for fname in sorted(files):
             if not fname.endswith(".bash"):
@@ -58,19 +58,20 @@ def parse_file(path, module, commands):
                 }
             continue
 
-        # Parse _grim_command_complete_params for description (file scope)
-        m = re.match(r'_grim_command_complete_params\s+"(\w+)"\s+"([^"]+)"', line)
+        # Parse _complete_params for description (file scope)
+        m = re.match(r'_complete_params\s+"(\w+)"\s+"([^"]+)"', line)
         if m:
             func_name, desc = m.group(1), m.group(2)
             if func_name in commands:
                 commands[func_name]["description"] = desc
             continue
 
+
         if not current_func:
             continue
 
         # Parameter
-        m = re.match(r'_grim_command_param\s+(\w+)(.*)', line)
+        m = re.match(r'_param\s+(\w+)(.*)', line)
         if m:
             pname = m.group(1)
             rest = m.group(2)
@@ -97,7 +98,7 @@ def parse_file(path, module, commands):
             continue
 
         # End of function body (next function or end of params section)
-        if re.match(r'_grim_command_param_parse', line):
+        if re.match(r'_param_parse', line):
             current_func = None
             continue
 
@@ -117,16 +118,16 @@ def format_show_tsv(cmd):
         print(f"{p['name']}\t{'yes' if p['required'] else ''}\t{'yes' if p['positional'] else ''}\t{p['default']}\t{p['help']}")
 
 
-def format_docs_md(commands, grim_bin="grim"):
+def format_docs_md(commands, bin="tome"):
     """Output full markdown documentation."""
     print("# Grim Commands")
     print()
-    print(f"Grim is a bash CLI framework. Run commands using `{grim_bin}`:")
+    print(f"Grim is a bash CLI framework. Run commands using `{bin}`:")
     print()
     print("```bash")
-    print(f"{grim_bin} nmap scan quick localhost")
-    print(f"{grim_bin} azure graph query my_query --output json")
-    print(f"{grim_bin} note add \"my note #tag\"")
+    print(f"{bin} nmap scan quick localhost")
+    print(f"{bin} azure graph query my_query --output json")
+    print(f"{bin} note add \"my note #tag\"")
     print("```")
     print()
 
@@ -186,7 +187,7 @@ def main():
     parser.add_argument("src_dir")
     parser.add_argument("--format", default="list", choices=["list", "show", "docs"])
     parser.add_argument("--command", default=None)
-    parser.add_argument("--grim-bin", default="grim", dest="grim_bin")
+    parser.add_argument("--bin", default="tome", dest="bin")
     args = parser.parse_args()
 
     commands = parse_source_files(args.src_dir)
@@ -200,7 +201,7 @@ def main():
             sys.exit(1)
         format_show_tsv(commands[name])
     elif args.format == "docs":
-        format_docs_md(commands, args.grim_bin)
+        format_docs_md(commands, args.bin)
 
 
 if __name__ == "__main__":

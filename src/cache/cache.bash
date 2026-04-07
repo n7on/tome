@@ -1,12 +1,12 @@
 # Cache management commands
 
 cache_clear() {
-    _grim_command_param_parse "$@" || return 1
+    _param_parse "$@" || return 1
 
-    if [[ -d "$_GRIM_CACHE_DIR" ]]; then
-        rm -rf "$_GRIM_CACHE_DIR"
-        _grim_message_warn "Cache cleared"
+    if [[ -d "$_CACHE_DIR" ]]; then
+        rm -rf "$_CACHE_DIR"
+        _message_warn "Cache cleared"
     fi
 }
 
-_grim_command_complete_params "cache_clear" "Clear all cached command output"
+_complete_params "cache_clear" "Clear all cached command output"

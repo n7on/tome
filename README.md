@@ -1,4 +1,4 @@
-# Grim
+# Tome
 
 A bash CLI framework for building clean, consistent command-line tools — with typed parameters, validation, output formatting, caching, and tab completion built in.
 
@@ -7,23 +7,23 @@ A bash CLI framework for building clean, consistent command-line tools — with 
 **Requirements:** bash, python3
 
 ```bash
-git clone <repo> grim
-cd grim
+git clone <repo> tome
+cd tome
 bash setup.bash
 ```
 
 Add to `~/.bashrc`:
 ```bash
-export PATH="/path/to/grim/bin:$PATH"
-source <(grim completion bash)
+export PATH="/path/to/tome/bin:$PATH"
+source <(tome completion bash)
 ```
 
 ## Usage
 
 ```bash
-grim nmap scan quick localhost
-grim azure context list --output json
-grim note add "my note #tag"
+tome nmap scan quick localhost
+tome azure context list --output json
+tome note add "my note #tag"
 ```
 
 ## Output formats
@@ -43,19 +43,19 @@ All commands support `--output`:
 All commands support these flags to slice and filter results:
 
 ```bash
-grim azure context list --filter name=prod       # exact match (wildcards supported)
-grim azure context list --filter name~prod       # contains match
-grim azure context list --sort -name             # sort descending
-grim azure context list --select name,id         # pick columns
-grim azure context list --limit 10               # first N rows
+tome azure context list --filter name=prod       # exact match (wildcards supported)
+tome azure context list --filter name~prod       # contains match
+tome azure context list --sort -name             # sort descending
+tome azure context list --select name,id         # pick columns
+tome azure context list --limit 10               # first N rows
 ```
 
 ## Caching
 
 ```bash
-grim azure graph query my_query --cache          # cache for 300s (default)
-grim azure graph query my_query --cache 3600     # cache for 1 hour
-grim cache clear                                 # clear all cached results
+tome azure graph query my_query --cache          # cache for 300s (default)
+tome azure graph query my_query --cache 3600     # cache for 1 hour
+tome cache clear                                 # clear all cached results
 ```
 
 ## Available commands

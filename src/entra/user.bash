@@ -1,22 +1,22 @@
 entra_user_list() {
-    _grim_command_requires az || return 1
-    _grim_command_param odata_filter --positional --help "OData filter expression"
-    _grim_command_param_parse "$@" || return 1
+    _requires az || return 1
+    _param odata_filter --positional --help "OData filter expression"
+    _param_parse "$@" || return 1
 
     local user_url="https://graph.microsoft.com/v1.0/users?\$select=displayName,userPrincipalName,assignedLicenses,accountEnabled"
     if [[ -n "$odata_filter" ]]; then
         local encoded
-        encoded=$("$_GRIM_PYTHON" -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$odata_filter")
+        encoded=$("$_TOME_PYTHON" -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$odata_filter")
         user_url+="&\$filter=$encoded"
     fi
 
     local skus users mfa
-    skus=$(_grim_command_exec _entra_get_all "https://graph.microsoft.com/v1.0/subscribedSkus") || return 1
-    users=$(_grim_command_exec _entra_get_all "$user_url") || return 1
-    mfa=$(_grim_command_exec _entra_get_all "https://graph.microsoft.com/v1.0/reports/authenticationMethods/userRegistrationDetails?\$select=userPrincipalName,isMfaRegistered") || return 1
+    skus=$(_exec _entra_get_all "https://graph.microsoft.com/v1.0/subscribedSkus") || return 1
+    users=$(_exec _entra_get_all "$user_url") || return 1
+    mfa=$(_exec _entra_get_all "https://graph.microsoft.com/v1.0/reports/authenticationMethods/userRegistrationDetails?\$select=userPrincipalName,isMfaRegistered") || return 1
 
-    _grim_command_exec_python entra user_list.py "$users" "$skus" "$mfa" \
-        | _grim_command_output_render
+    _exec_python entra user_list.py "$users" "$skus" "$mfa" \
+        | _output_render
 }
 
-_grim_command_complete_params "entra_user_list" "List Entra users with license and MFA info" "odata_filter"
+_complete_params "entra_user_list" "List Entra users with license and MFA info" "odata_filter"
