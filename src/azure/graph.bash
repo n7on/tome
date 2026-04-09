@@ -1,3 +1,4 @@
+_require_module "json"
 
 _azure_graph_queries_dir="$(dirname "${BASH_SOURCE[0]}")/kql/graph"
 _azure_graph_user_queries_dir="$HOME/.tome/kql/azure/graph"

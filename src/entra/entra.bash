@@ -1,3 +1,4 @@
+_require_module "json"
 
 # Fetch all pages from a Graph API endpoint, returning a single JSON array
 _entra_get_all() {

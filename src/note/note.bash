@@ -1,4 +1,6 @@
 # Notes management - stores daily JSON notes in ~/.notes/
+_require_module "git"
+_require_module "json"
 
 _NOTE_DIR="$HOME/.notes"
 

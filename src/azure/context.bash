@@ -1,3 +1,5 @@
+_require_module "json"
+
 _azure_context_dir="$HOME/.tome/azure/contexts"
 
 _azure_account_get_subscriptions() {

@@ -1,3 +1,5 @@
+_require_module "json"
+
 # MS365 app registration and authentication
 # The "_tome" app supports both:
 #   - Application permissions (client credentials) — for APIs like sensitivity labels

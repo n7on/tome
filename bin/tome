@@ -6,36 +6,45 @@
 _TOME_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 _TOME_PYTHON="$_TOME_DIR/.venv/bin/python3"
 
+# Source all _* framework dirs
+_tome_source_framework() {
+    local dir file
+    for dir in "$_TOME_DIR/src"/_*/; do
+        for file in "$dir"*.bash; do
+            [[ -f "$file" ]] && source "$file"
+        done
+    done
+}
+
 # Built-in: tome __complete <prefix> <prev> <cur>
 if [[ "${1:-}" == "__complete" ]]; then
     _prefix="${2:-}"
     _prev="${3:-}"
     _cur="${4:-}"
 
-    # Top-level: list namespaces from directory names, no sourcing needed
+    # Top-level: list all available namespaces
     if [[ -z "$_prefix" ]]; then
         for _dir in "$_TOME_DIR/src"/*/; do
             _base="$(basename "$_dir")"
             [[ "$_base" == _* ]] && continue
             echo "$_base"
         done
+        for _repo in "$HOME/.tome/volume"/*/; do
+            [[ -d "$_repo/src" ]] || continue
+            for _dir in "$_repo/src"/*/; do
+                _base="$(basename "$_dir")"
+                [[ "$_base" == _* ]] && continue
+                echo "$_base"
+            done
+        done | sort -u
         exit 0
     fi
 
-    # Source framework files
-    for _dir in "$_TOME_DIR/src"/_*/; do
-        for _file in "$_dir"*.bash; do
-            [[ -f "$_file" ]] && source "$_file"
-        done
-    done
+    _tome_source_framework
 
-    # Source only the relevant namespace module
+    # Source the relevant namespace module (and its deps)
     _namespace="${_prefix%%_*}"
-    if [[ -d "$_TOME_DIR/src/$_namespace" ]]; then
-        for _file in "$_TOME_DIR/src/$_namespace"/*.bash; do
-            [[ -f "$_file" ]] && source "$_file"
-        done
-    fi
+    _require_module "$_namespace" 2>/dev/null || true
 
     # Prev is a flag: return value or dynamic completions
     if [[ "$_prev" == --* ]]; then
@@ -68,18 +77,7 @@ if [[ "${1:-}" == "__complete" ]]; then
     exit 0
 fi
 
-source "$_TOME_DIR/init.bash"
-
-# Built-in: tome completion bash
-if [[ "${1:-}" == "completion" && "${2:-}" == "bash" ]]; then
-    completion_bash
-    exit $?
-fi
-
-if [[ "${1:-}" == "completion" && "${2:-}" == "zsh" ]]; then
-    completion_zsh
-    exit $?
-fi
+_tome_source_framework
 
 # Collect non-flag leading words to form the command name
 parts=()
@@ -87,6 +85,15 @@ for arg in "$@"; do
     [[ "$arg" == -* ]] && break
     parts+=("$arg")
 done
+
+if [[ ${#parts[@]} -eq 0 ]]; then
+    echo "Usage: tome <command> [args...]" >&2
+    echo "Run 'tome command list' for available commands" >&2
+    exit 1
+fi
+
+# Source the relevant namespace module (and its deps)
+_require_module "${parts[0]}" || exit 1
 
 # Try longest match first (nmap scan quick → nmap_scan_quick)
 cmd="" cmd_len=0

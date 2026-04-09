@@ -1,3 +1,5 @@
+_require_module "json"
+
 _ado_app_id="499b84ac-1321-427f-aa17-267ca6975798"
 
 _config_init ado config
