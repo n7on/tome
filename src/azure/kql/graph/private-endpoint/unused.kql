@@ -1,5 +1,0 @@
-Resources
-| where type == "microsoft.network/privateendpoints"
-| where properties.privateLinkServiceConnections[0].properties.privateLinkServiceConnectionState.status != "Approved"
-| where isnull(tags.ArchivedUntil) or todatetime(tostring(tags.ArchivedUntil)) <= now()
-| project name, resourceGroup, location, kind, subscriptionId

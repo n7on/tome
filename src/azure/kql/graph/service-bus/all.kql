@@ -1,3 +1,0 @@
-Resources
-| where type == "microsoft.servicebus/namespaces"
-| project name, resourceGroup, location, kind, subscriptionId

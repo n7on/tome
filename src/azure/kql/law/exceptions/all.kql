@@ -1,4 +1,0 @@
-AppExceptions
-| summarize Count = count() by ExceptionType, OuterMessage, Assembly
-| order by Count desc
-| project ExceptionType, OuterMessage, Assembly, Count

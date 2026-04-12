@@ -1,3 +1,0 @@
-SecurityAlert
-| order by TimeGenerated desc
-| project TimeGenerated, AlertName, AlertSeverity, CompromisedEntity, Description

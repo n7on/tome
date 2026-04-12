@@ -1,5 +1,0 @@
-AppRequests
-| where Success == false
-| summarize Count = count() by Name, ResultCode, OperationName
-| order by Count desc
-| project Name, ResultCode, OperationName, Count

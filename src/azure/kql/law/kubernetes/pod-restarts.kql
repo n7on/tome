@@ -1,5 +1,0 @@
-KubePodInventory
-| where RestartCount > 0
-| summarize Restarts = max(RestartCount) by Name, Namespace, ContainerName
-| order by Restarts desc
-| project Name, Namespace, ContainerName, Restarts

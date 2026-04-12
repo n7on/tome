@@ -1,3 +1,0 @@
-Resources
-| where type == "microsoft.containerservice/managedclusters"
-| project name, resourceGroup, location, kind, subscriptionId

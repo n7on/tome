@@ -1,5 +1,0 @@
-SigninLogs
-| where ResultType != 0
-| summarize FailedAttempts = count() by UserPrincipalName, AppDisplayName, ResultDescription
-| order by FailedAttempts desc
-| project UserPrincipalName, AppDisplayName, ResultDescription, FailedAttempts

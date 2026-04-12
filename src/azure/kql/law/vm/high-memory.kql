@@ -1,6 +1,0 @@
-Perf
-| where ObjectName == "Memory" and CounterName == "% Committed Bytes In Use"
-| summarize AvgMemory = round(avg(CounterValue), 1) by Computer
-| where AvgMemory > 85
-| order by AvgMemory desc
-| project Computer, AvgMemory

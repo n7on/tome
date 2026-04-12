@@ -1,3 +1,0 @@
-Resources
-| where type == "microsoft.insights/components"
-| project name, resourceGroup, location, kind, subscriptionId

@@ -1,4 +1,0 @@
-AppServiceHTTPLogs
-| where TimeTaken > 3000
-| order by TimeTaken desc
-| project TimeGenerated, CsHost, CsUriStem, ScStatus, TimeTaken

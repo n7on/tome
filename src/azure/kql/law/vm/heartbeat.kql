@@ -1,5 +1,0 @@
-Heartbeat
-| summarize LastHeartbeat = max(TimeGenerated) by Computer, OSType, Category
-| where LastHeartbeat < ago(5m)
-| order by LastHeartbeat asc
-| project Computer, OSType, Category, LastHeartbeat

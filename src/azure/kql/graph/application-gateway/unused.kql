@@ -1,7 +1,0 @@
-Resources
-| where type == "microsoft.network/applicationgateways"
-| where array_length(properties.backendAddressPools) == 0
-    or (array_length(properties.backendAddressPools) > 0
-        and array_length(properties.backendAddressPools[0].properties.backendAddresses) == 0)
-| where isnull(tags.ArchivedUntil) or todatetime(tostring(tags.ArchivedUntil)) <= now()
-| project name, resourceGroup, location, kind, subscriptionId

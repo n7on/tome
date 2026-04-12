@@ -1,5 +1,0 @@
-Resources
-| where type == "microsoft.compute/virtualmachinescalesets"
-| where properties.sku.capacity == 0
-| where isnull(tags.ArchivedUntil) or todatetime(tostring(tags.ArchivedUntil)) <= now()
-| project name, resourceGroup, location, kind, subscriptionId

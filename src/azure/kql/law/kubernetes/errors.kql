@@ -1,4 +1,0 @@
-ContainerLog
-| where LogEntry has_any ("error", "Error", "ERROR", "exception", "Exception")
-| order by TimeGenerated desc
-| project TimeGenerated, ContainerName, LogEntry

@@ -1,6 +1,0 @@
-Perf
-| where ObjectName == "Processor" and CounterName == "% Processor Time"
-| summarize AvgCPU = round(avg(CounterValue), 1) by Computer
-| where AvgCPU > 80
-| order by AvgCPU desc
-| project Computer, AvgCPU

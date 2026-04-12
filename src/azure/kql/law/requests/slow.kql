@@ -1,4 +1,0 @@
-AppRequests
-| where DurationMs > 3000
-| order by DurationMs desc
-| project TimeGenerated, Name, Url, DurationMs, ResultCode, OperationName
