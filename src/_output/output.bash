@@ -40,6 +40,6 @@ _output_render() {
     [[ -n "${select:-}" ]] && args+=(--select "$select")
     [[ -n "${limit:-}" ]]  && args+=(--limit "$limit")
 
-    local _python="${_TOME_PYTHON:-python3}"
-    echo "$data" | "$_python" "$_TOME_DIR/src/_output/python/render.py" "${args[@]}"
+    local _python="${_RIG_PYTHON:-python3}"
+    echo "$data" | "$_python" "$_RIG_DIR/src/_output/python/render.py" "${args[@]}"
 }

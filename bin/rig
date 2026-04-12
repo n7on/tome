@@ -3,20 +3,20 @@
 # Usage: tome <command> [args...]
 #        tome nmap scan quick localhost
 
-_TOME_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-_TOME_PYTHON="$_TOME_DIR/.venv/bin/python3"
+_RIG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_RIG_PYTHON="$_RIG_DIR/.venv/bin/python3"
 
 # Source all _* framework dirs
-_tome_source_framework() {
+_rig_source_framework() {
     local dir file
-    for dir in "$_TOME_DIR/src"/_*/; do
+    for dir in "$_RIG_DIR/src"/_*/; do
         for file in "$dir"*.bash; do
             [[ -f "$file" ]] && source "$file"
         done
     done
 }
 
-# Built-in: tome __complete <prefix> <prev> <cur>
+# Built-in: rig __complete <prefix> <prev> <cur>
 if [[ "${1:-}" == "__complete" ]]; then
     _prefix="${2:-}"
     _prev="${3:-}"
@@ -24,12 +24,12 @@ if [[ "${1:-}" == "__complete" ]]; then
 
     # Top-level: list all available namespaces
     if [[ -z "$_prefix" ]]; then
-        for _dir in "$_TOME_DIR/src"/*/; do
+        for _dir in "$_RIG_DIR/src"/*/; do
             _base="$(basename "$_dir")"
             [[ "$_base" == _* ]] && continue
             echo "$_base"
         done
-        for _repo in "$HOME/.tome/plugin"/*/; do
+        for _repo in "$HOME/.rig/plugin"/*/; do
             [[ -d "$_repo/src" ]] || continue
             for _dir in "$_repo/src"/*/; do
                 _base="$(basename "$_dir")"
@@ -40,7 +40,7 @@ if [[ "${1:-}" == "__complete" ]]; then
         exit 0
     fi
 
-    _tome_source_framework
+    _rig_source_framework
 
     # Source the relevant namespace module (and its deps)
     _namespace="${_prefix%%_*}"
@@ -77,7 +77,7 @@ if [[ "${1:-}" == "__complete" ]]; then
     exit 0
 fi
 
-_tome_source_framework
+_rig_source_framework
 
 # Collect non-flag leading words to form the command name
 parts=()
@@ -88,7 +88,7 @@ done
 
 if [[ ${#parts[@]} -eq 0 ]]; then
     echo "Usage: tome <command> [args...]" >&2
-    echo "Run 'tome command list' for available commands" >&2
+    echo "Run 'rig command list' for available commands" >&2
     exit 1
 fi
 
@@ -111,7 +111,7 @@ done
 
 if [[ -z "$cmd" ]]; then
     echo "Unknown command: ${parts[*]}" >&2
-    echo "Run 'tome command list' for available commands" >&2
+    echo "Run 'rig command list' for available commands" >&2
     exit 1
 fi
 

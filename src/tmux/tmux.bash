@@ -6,7 +6,7 @@
 tmux_popup() {
     _description "Display piped input in a floating tmux popup"
     _requires tmux || return 1
-    _param title --default "tome" --help "Popup title"
+    _param title --default "rig" --help "Popup title"
     _param width --default "80%" --help "Popup width (columns or percentage)"
     _param height --default "60%" --help "Popup height (rows or percentage)"
     _param_parse "$@" || return 1

@@ -1,13 +1,13 @@
 _require_module "json"
 
 # MS365 app registration and authentication
-# The "_tome" app supports both:
+# The "_rig" app supports both:
 #   - Application permissions (client credentials) — for APIs like sensitivity labels
 #   - Delegated permissions (device code flow) — for APIs needing user context
 
-_MS365_APP_NAME="_tome"
+_MS365_APP_NAME="_rig"
 _MS365_GRAPH_ID="00000003-0000-0000-c000-000000000000"
-_MS365_TOKEN_DIR="$HOME/.tome/ms365"
+_MS365_TOKEN_DIR="$HOME/.rig/ms365"
 _MS365_APP_TOKEN_FILE="$_MS365_TOKEN_DIR/.app_token"
 _MS365_USER_TOKEN_FILE="$_MS365_TOKEN_DIR/.user_token"
 
@@ -124,7 +124,7 @@ ms365_app_setup() {
     # Create client secret for application permissions
     local secret_result
     secret_result=$(_exec az ad app credential reset \
-        --id "$app_id" --display-name "tome" --output json) || {
+        --id "$app_id" --display-name "rig" --output json) || {
         _message_error "Failed to create client secret"
         return 1
     }

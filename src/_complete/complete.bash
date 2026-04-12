@@ -1,4 +1,4 @@
-# Completion registration for tome commands
+# Completion registration for rig commands
 declare -gA _COMPLETERS
 declare -gA _COMPLETER_FUNCS
 declare -gA _PARAMS

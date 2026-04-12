@@ -1,11 +1,11 @@
-# List external dependencies across tome modules
+# List external dependencies across rig modules
 
 deps() {
-    _description "List all external dependencies across tome modules"
+    _description "List all external dependencies across rig modules"
     _param_parse "$@" || return 1
 
     {
-        grep -rh "^\s*_requires [a-z]" "$_TOME_DIR/src" --include="*.bash" \
+        grep -rh "^\s*_requires [a-z]" "$_RIG_DIR/src" --include="*.bash" \
             | grep -v "_az_extension" \
             | sed 's/.*_requires \([^|]*\).*/\1/' \
             | tr ' ' '\n' \
@@ -14,7 +14,7 @@ deps() {
             | sort -u \
             | while IFS= read -r tool; do printf "%s\tcommand\n" "$tool"; done
 
-        grep -rh "^\s*_requires_az_extension [a-z]" "$_TOME_DIR/src" --include="*.bash" \
+        grep -rh "^\s*_requires_az_extension [a-z]" "$_RIG_DIR/src" --include="*.bash" \
             | sed 's/.*_requires_az_extension \([^|]*\).*/\1/' \
             | tr ' ' '\n' \
             | tr -d ' \t' \

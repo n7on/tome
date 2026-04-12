@@ -1,4 +1,4 @@
-"""Generate command documentation from tome source files.
+"""Generate command documentation from rig source files.
 
 Parses bash files for _description, _param,
 and _complete_params calls to build command metadata.
@@ -115,7 +115,7 @@ def format_show_tsv(cmd):
         print(f"{p['name']}\t{'yes' if p['required'] else ''}\t{'yes' if p['positional'] else ''}\t{p['default']}\t{p['help']}")
 
 
-def format_docs_md(commands, bin="tome"):
+def format_docs_md(commands, bin="rig"):
     """Output full markdown documentation."""
     print("# Grim Commands")
     print()
@@ -184,7 +184,7 @@ def main():
     parser.add_argument("src_dir")
     parser.add_argument("--format", default="list", choices=["list", "show", "docs"])
     parser.add_argument("--command", default=None)
-    parser.add_argument("--bin", default="tome", dest="bin")
+    parser.add_argument("--bin", default="rig", dest="bin")
     args = parser.parse_args()
 
     commands = parse_source_files(args.src_dir)

@@ -1,7 +1,7 @@
-_TOME_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-_TOME_PYTHON="$_TOME_DIR/.venv/bin/python3"
+_RIG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_RIG_PYTHON="$_RIG_DIR/.venv/bin/python3"
 
-export PATH="$_TOME_DIR/bin:$PATH"
+export PATH="$_RIG_DIR/bin:$PATH"
 
 # Set up shell completion
-# Run 'tome completion bash' or 'tome completion zsh' to generate the script
+# Run 'rig completion bash' or 'rig completion zsh' to generate the script

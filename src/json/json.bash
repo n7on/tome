@@ -1,6 +1,6 @@
 # JSON utilities - pipe and file operations
 
-_json_python="$_TOME_DIR/src/json/python"
+_json_python="$_RIG_DIR/src/json/python"
 
 # Get a single value from JSON by path
 # Usage: echo "$json" | json_get --path 'appId'
@@ -10,7 +10,7 @@ json_get() {
     _param path --required --positional --help "Dotted path to the value"
     _param_parse "$@" || return 1
 
-    "$_TOME_PYTHON" "$_json_python/get.py" "$path"
+    "$_RIG_PYTHON" "$_json_python/get.py" "$path"
 }
 
 # Extract fields from a JSON array as TSV
@@ -21,7 +21,7 @@ json_tsv() {
     _param fields --required --help "Comma-separated fields (col=path or just path)"
     _param_parse "$@" || return 1
 
-    "$_TOME_PYTHON" "$_json_python/tsv.py" "$path" "$fields"
+    "$_RIG_PYTHON" "$_json_python/tsv.py" "$path" "$fields"
 }
 
 # Flatten a JSON object to key/value TSV rows
@@ -31,7 +31,7 @@ json_kv() {
     _param path --default '.' --positional --help "Dotted path to the object"
     _param_parse "$@" || return 1
 
-    "$_TOME_PYTHON" "$_json_python/kv.py" "$path"
+    "$_RIG_PYTHON" "$_json_python/kv.py" "$path"
 }
 
 # Find first matching item in a JSON array
@@ -47,7 +47,7 @@ json_find() {
     local args=("$path" "$where" "$equals")
     [[ -n "$return" ]] && args+=("$return")
 
-    "$_TOME_PYTHON" "$_json_python/find.py" "${args[@]}"
+    "$_RIG_PYTHON" "$_json_python/find.py" "${args[@]}"
 }
 
 # Build a JSON object from key=value pairs
@@ -55,7 +55,7 @@ json_find() {
 #        json_build --base "$existing" 'extra=bar'
 json_build() {
     _description "Build a JSON object from key=value arguments"
-    "$_TOME_PYTHON" "$_json_python/build.py" "$@"
+    "$_RIG_PYTHON" "$_json_python/build.py" "$@"
 }
 
 # Set a key/value in a JSON file
@@ -67,7 +67,7 @@ json_set() {
     _param value --required --help "Value to set"
     _param_parse "$@" || return 1
 
-    "$_TOME_PYTHON" "$_json_python/set.py" "$file" "$key" "$value"
+    "$_RIG_PYTHON" "$_json_python/set.py" "$file" "$key" "$value"
 }
 
 # Append a JSON object to an array in a file
@@ -78,7 +78,7 @@ json_append() {
     _param item --required --help "JSON object to append"
     _param_parse "$@" || return 1
 
-    "$_TOME_PYTHON" "$_json_python/append.py" "$file" "$item"
+    "$_RIG_PYTHON" "$_json_python/append.py" "$file" "$item"
 }
 
 # Remove items from a JSON array in a file by matching a field
@@ -90,7 +90,7 @@ json_remove() {
     _param value --required --help "Value to match for removal"
     _param_parse "$@" || return 1
 
-    "$_TOME_PYTHON" "$_json_python/remove.py" "$file" "$match" "$value"
+    "$_RIG_PYTHON" "$_json_python/remove.py" "$file" "$match" "$value"
 }
 
 # Register completions

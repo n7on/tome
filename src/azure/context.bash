@@ -1,6 +1,6 @@
 _require_module "json"
 
-_azure_context_dir="$HOME/.tome/azure/contexts"
+_azure_context_dir="$HOME/.rig/azure/contexts"
 
 _azure_account_get_subscriptions() {
     az account list --query "[].name" -o tsv 2>/dev/null | \

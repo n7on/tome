@@ -7,7 +7,7 @@ entra_user_list() {
     local user_url="https://graph.microsoft.com/v1.0/users?\$select=displayName,userPrincipalName,assignedLicenses,accountEnabled"
     if [[ -n "$odata_filter" ]]; then
         local encoded
-        encoded=$("$_TOME_PYTHON" -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$odata_filter")
+        encoded=$("$_RIG_PYTHON" -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$odata_filter")
         user_url+="&\$filter=$encoded"
     fi
 

@@ -69,12 +69,12 @@ _exec_python() {
     local script="$2"
     shift 2
 
-    if [[ ! -x "$_TOME_PYTHON" ]]; then
+    if [[ ! -x "$_RIG_PYTHON" ]]; then
         _message_error "Python venv not found. Run setup.bash first."
         return 1
     fi
 
-    local script_path="$_TOME_DIR/src/$namespace/python/$script"
+    local script_path="$_RIG_DIR/src/$namespace/python/$script"
     if [[ ! -f "$script_path" ]]; then
         _message_error "Python script not found: $script_path"
         return 1
@@ -83,7 +83,7 @@ _exec_python() {
     local stderr_file
     stderr_file=$(mktemp)
 
-    _cache_wrap "${cache:-0}" "$_TOME_PYTHON" "$script_path" "$@" 2>"$stderr_file"
+    _cache_wrap "${cache:-0}" "$_RIG_PYTHON" "$script_path" "$@" 2>"$stderr_file"
 
     local rc=$?
     _exec_stderr "$stderr_file" "$rc"

@@ -3,18 +3,18 @@
 # Get the config file path for a namespace/module
 # Usage: _config_file azure ado
 _config_file() {
-    echo "$HOME/.tome/$1/$2.json"
+    echo "$HOME/.rig/$1/$2.json"
 }
 
 # Lazily initialise a module config file from its example in the repo.
-# Copies src/<namespace>/<module>.json.example to ~/.tome/<namespace>/<module>.json on first use.
+# Copies src/<namespace>/<module>.json.example to ~/.rig/<namespace>/<module>.json on first use.
 # Usage: _config_init <namespace> <module> (called at module scope, not inside functions)
 _config_init() {
     local namespace="$1"
     local module="$2"
     local config_file
     config_file=$(_config_file "$namespace" "$module")
-    local example="$_TOME_DIR/src/$namespace/$module.json.example"
+    local example="$_RIG_DIR/src/$namespace/$module.json.example"
 
     if [[ ! -f "$config_file" && -f "$example" ]]; then
         mkdir -p "$(dirname "$config_file")"

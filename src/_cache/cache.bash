@@ -1,5 +1,5 @@
-# Cache management for tome commands
-_CACHE_DIR="${HOME}/.tome/.cache"
+# Cache management for rig commands
+_CACHE_DIR="${HOME}/.rig/.cache"
 
 # Generate a cache key from arguments
 # Usage: _cache_key "func_name" "arg1" "arg2"

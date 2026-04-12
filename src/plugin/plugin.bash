@@ -1,4 +1,4 @@
-_PLUGIN_DIR="$HOME/.tome/plugin"
+_PLUGIN_DIR="$HOME/.rig/plugin"
 
 plugin_install() {
     _description "Install a plugin from a git repository"
@@ -11,7 +11,7 @@ plugin_install() {
     local dest="$_PLUGIN_DIR/$name"
 
     if [[ -d "$dest" ]]; then
-        _message_error "Plugin '$name' is already installed. Use 'tome plugin update $name' to update."
+        _message_error "Plugin '$name' is already installed. Use 'rig plugin update $name' to update."
         return 1
     fi
 
@@ -27,7 +27,7 @@ plugin_install() {
         [[ -d "$ns_dir" ]] || continue
         ns="$(basename "$ns_dir")"
         [[ "$ns" == _* ]] && continue
-        if [[ -d "$_TOME_DIR/src/$ns" ]]; then
+        if [[ -d "$_RIG_DIR/src/$ns" ]]; then
             conflicts+=("$ns (built-in)")
             continue
         fi
@@ -58,7 +58,7 @@ plugin_list() {
 
     # Built-in namespaces
     local ns_dir ns
-    for ns_dir in "$_TOME_DIR/src"/*/; do
+    for ns_dir in "$_RIG_DIR/src"/*/; do
         ns="$(basename "$ns_dir")"
         [[ "$ns" == _* ]] && continue
         printf "%s\t%s\n" "$ns" "built-in"
