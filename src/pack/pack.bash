@@ -1,6 +1,6 @@
-_PLUGIN_DIR="$HOME/.rig/plugin"
+_PACK_DIR="$HOME/.rig/pack"
 
-_plugin_install_dir() {
+_pack_install_dir() {
     local name="$1" url="$2" dest="$3"
 
     # Clone to a temp location first so we can check for conflicts
@@ -8,7 +8,7 @@ _plugin_install_dir() {
     tmp=$(mktemp -d)
     _exec git clone "$url" "$tmp/$name" || { rm -rf "$tmp"; return 1; }
 
-    # Check for namespace conflicts with built-ins and other installed plugins
+    # Check for namespace conflicts with built-ins and other installed packs
     local conflicts=()
     local ns_dir ns
     for ns_dir in "$tmp/$name/src"/*/; do
@@ -20,7 +20,7 @@ _plugin_install_dir() {
             continue
         fi
         local existing
-        for existing in "$_PLUGIN_DIR"/*/src/"$ns"; do
+        for existing in "$_PACK_DIR"/*/src/"$ns"; do
             if [[ -d "$existing" ]]; then
                 conflicts+=("$ns ($(basename "$(dirname "$(dirname "$existing")")")")
                 break
@@ -44,30 +44,30 @@ _plugin_install_dir() {
     fi
 }
 
-plugin_install() {
-    _description "Install a plugin from a git repository"
+pack_install() {
+    _description "Install a pack from a git repository"
     _requires git || return 1
     _param url --required --positional --help "Git repository URL"
     _param_parse "$@" || return 1
 
     local name
     name="$(basename "$url" .git)"
-    local dest="$_PLUGIN_DIR/$name"
+    local dest="$_PACK_DIR/$name"
 
     if [[ -d "$dest" ]]; then
-        _message_error "Plugin '$name' is already installed. Use 'rig plugin update $name' to update."
+        _message_error "Pack '$name' is already installed. Use 'rig pack update $name' to update."
         return 1
     fi
 
-    mkdir -p "$_PLUGIN_DIR"
-    _plugin_install_dir "$name" "$url" "$dest" || return 1
+    mkdir -p "$_PACK_DIR"
+    _pack_install_dir "$name" "$url" "$dest" || return 1
 
-    _config_append "plugin" "plugins" "$(json_build "name=$name" "url=$url")"
+    _config_append "pack" "packs" "$(json_build "name=$name" "url=$url")"
     _message_warn "Installed: $name"
 }
 
-plugin_list() {
-    _description "List installed plugins and their namespaces"
+pack_list() {
+    _description "List installed packs and their namespaces"
     _param_parse "$@" || return 1
 
     {
@@ -79,49 +79,49 @@ plugin_list() {
             printf "%s\t%s\n" "$ns" "built-in"
         done
 
-        # Installed plugins
-        local plugin_dir plugin_name
-        for plugin_dir in "$_PLUGIN_DIR"/*/; do
-            [[ -d "$plugin_dir/src" ]] || continue
-            plugin_name="$(basename "$plugin_dir")"
-            for ns_dir in "$plugin_dir/src"/*/; do
+        # Installed packs
+        local pack_dir pack_name
+        for pack_dir in "$_PACK_DIR"/*/; do
+            [[ -d "$pack_dir/src" ]] || continue
+            pack_name="$(basename "$pack_dir")"
+            for ns_dir in "$pack_dir/src"/*/; do
                 ns="$(basename "$ns_dir")"
                 [[ "$ns" == _* ]] && continue
-                printf "%s\t%s\n" "$ns" "$plugin_name"
+                printf "%s\t%s\n" "$ns" "$pack_name"
             done
         done
-    } | _output_render "namespace,plugin"
+    } | _output_render "namespace,pack"
 }
 
-plugin_remove() {
-    _description "Remove an installed plugin"
-    _param name --required --positional --help "Plugin name"
+pack_remove() {
+    _description "Remove an installed pack"
+    _param name --required --positional --help "Pack name"
     _param_parse "$@" || return 1
 
-    local dest="$_PLUGIN_DIR/$name"
+    local dest="$_PACK_DIR/$name"
     if [[ ! -d "$dest" ]]; then
-        _message_error "Plugin '$name' not found in $_PLUGIN_DIR"
+        _message_error "Pack '$name' not found in $_PACK_DIR"
         return 1
     fi
 
     rm -rf "$dest"
-    _config_remove "plugin" "plugins" "name" "$name"
+    _config_remove "pack" "packs" "name" "$name"
     _message_warn "Removed: $name"
 }
 
-plugin_update() {
-    _description "Update an installed plugin"
+pack_update() {
+    _description "Update an installed pack"
     _requires git || return 1
-    _param name --positional --help "Plugin name to update (omit for all)"
+    _param name --positional --help "Pack name to update (omit for all)"
     _param_parse "$@" || return 1
 
     local targets=()
     if [[ -n "$name" ]]; then
-        [[ -d "$_PLUGIN_DIR/$name" ]] || { _message_error "Plugin '$name' not found"; return 1; }
-        targets=("$_PLUGIN_DIR/$name")
+        [[ -d "$_PACK_DIR/$name" ]] || { _message_error "Pack '$name' not found"; return 1; }
+        targets=("$_PACK_DIR/$name")
     else
         local d
-        for d in "$_PLUGIN_DIR"/*/; do
+        for d in "$_PACK_DIR"/*/; do
             [[ -d "$d" ]] && targets+=("$d")
         done
     fi
@@ -143,10 +143,10 @@ plugin_update() {
     done
 }
 
-_complete_type "plugin_install" action
-_complete_params "plugin_install" "url"
-_complete_params "plugin_list"
-_complete_type "plugin_remove" action
-_complete_params "plugin_remove" "name"
-_complete_type "plugin_update" action
-_complete_params "plugin_update" "name"
+_complete_type "pack_install" action
+_complete_params "pack_install" "url"
+_complete_params "pack_list"
+_complete_type "pack_remove" action
+_complete_params "pack_remove" "name"
+_complete_type "pack_update" action
+_complete_params "pack_update" "name"

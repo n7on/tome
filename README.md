@@ -23,26 +23,26 @@ source <(rig completion bash)   # or zsh
 
 ## Plugins
 
-Rig ships with only the core framework. Commands are added via plugins:
+Rig ships with only the core framework. Commands are added via packs:
 
 ```bash
-rig plugin install https://github.com/n7on/rig-microsoft
-rig plugin install https://github.com/n7on/rig-note
-rig plugin install https://github.com/n7on/rig-export
-rig plugin install https://github.com/n7on/rig-general
+rig pack install https://github.com/n7on/rig-microsoft
+rig pack install https://github.com/n7on/rig-note
+rig pack install https://github.com/n7on/rig-export
+rig pack install https://github.com/n7on/rig-general
 ```
 
-List installed plugins:
+List installed packs:
 
 ```bash
-rig plugin list
+rig pack list
 ```
 
 Update or remove:
 
 ```bash
-rig plugin update
-rig plugin remove rig-note
+rig pack update
+rig pack remove rig-note
 ```
 
 ## Output formats
@@ -60,11 +60,11 @@ All commands support `--output_format`:
 ## Filtering and sorting
 
 ```bash
-rig plugin list --filter plugin=built-in
-rig plugin list --filter namespace~az
-rig plugin list --sort namespace
-rig plugin list --select namespace
-rig plugin list --limit 5
+rig pack list --filter pack=built-in
+rig pack list --filter namespace~az
+rig pack list --sort namespace
+rig pack list --select namespace
+rig pack list --limit 5
 ```
 
 ## Caching
@@ -75,6 +75,6 @@ rig <command> --cache 3600     # cache for 1 hour
 rig cache clear                # clear all cached results
 ```
 
-## Writing plugins
+## Writing packs
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).

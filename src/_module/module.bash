@@ -13,7 +13,7 @@ _require_module() {
     # Then search installed packs
     if [[ ! -d "$dir" ]]; then
         local candidate
-        for candidate in "$HOME/.rig/plugin"/*/src/"$ns"; do
+        for candidate in "$HOME/.rig/pack"/*/src/"$ns"; do
             if [[ -d "$candidate" ]]; then
                 dir="$candidate"
                 break

@@ -1,10 +1,10 @@
-_require_module "plugin"
+_require_module "pack"
 _require_module "json"
 
 _RIG_VENV="$HOME/.rig/.venv"
 
 setup() {
-    _description "Set up rig: create venv, install dependencies and plugins"
+    _description "Set up rig: create venv, install dependencies and packs"
     _param_parse "$@" || return 1
 
     if ! command -v python3 &>/dev/null; then
@@ -28,22 +28,20 @@ setup() {
             -r "$_RIG_DIR/requirements.txt"
     fi
 
-    # Reinstall plugins from manifest
-    if [[ -f "$_RIG_PLUGIN_MANIFEST" ]]; then
-        local name url dest
-        while IFS=$'\t' read -r name url; do
-            dest="$HOME/.rig/plugin/$name"
-            if [[ -d "$dest" ]]; then
-                _message_warn "Already installed: $name"
-                continue
-            fi
-            echo "Installing plugin: $name..."
-            _requires git || return 1
-            mkdir -p "$HOME/.rig/plugin"
-            _plugin_install_dir "$name" "$url" "$dest" || continue
-            _message_warn "Installed: $name"
-        done < <(_config_list "plugin" "plugins" "name,url")
-    fi
+    # Reinstall packs from manifest
+    local name url dest
+    while IFS=$'\t' read -r name url; do
+        dest="$_PACK_DIR/$name"
+        if [[ -d "$dest" ]]; then
+            _message_warn "Already installed: $name"
+            continue
+        fi
+        echo "Installing pack: $name..."
+        _requires git || return 1
+        mkdir -p "$_PACK_DIR"
+        _pack_install_dir "$name" "$url" "$dest" || continue
+        _message_warn "Installed: $name"
+    done < <(_config_list "pack" "packs" "name,url")
 
     echo ""
     echo "Setup complete. Add to your .bashrc or .zshrc:"

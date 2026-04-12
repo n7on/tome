@@ -39,7 +39,7 @@ _command_show_complete() {
         [[ "$ns" == _* ]] && continue
         _require_module "$ns" 2>/dev/null
     done
-    for _vol in "$HOME/.rig/plugin"/*/; do
+    for _vol in "$HOME/.rig/pack"/*/; do
         [[ -d "$_vol/src" ]] || continue
         for ns_dir in "$_vol/src"/*/; do
             ns="$(basename "$ns_dir")"

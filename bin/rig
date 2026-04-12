@@ -29,7 +29,7 @@ if [[ "${1:-}" == "__complete" ]]; then
             [[ "$_base" == _* ]] && continue
             echo "$_base"
         done
-        for _repo in "$HOME/.rig/plugin"/*/; do
+        for _repo in "$HOME/.rig/pack"/*/; do
             [[ -d "$_repo/src" ]] || continue
             for _dir in "$_repo/src"/*/; do
                 _base="$(basename "$_dir")"
