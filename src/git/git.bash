@@ -69,9 +69,13 @@ git_status() {
 
 # Register completions
 _complete_params "git_status" "path"
+_complete_path "git_status" "path" dir
 _complete_type "git_pull" action
 _complete_params "git_pull" "path"
+_complete_path "git_pull" "path" dir
 _complete_type "git_push" action
 _complete_params "git_push" "path" "message"
+_complete_path "git_push" "path" dir
 _complete_type "git_sync" action
 _complete_params "git_sync" "path" "message"
+_complete_path "git_sync" "path" dir

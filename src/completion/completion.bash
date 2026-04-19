@@ -18,7 +18,17 @@ _jig_complete() {
         prefix="${prefix:+${prefix}_}${word}"
     done
 
-    COMPREPLY=($(compgen -W "$(jig __complete "$prefix" "$prev" "$cur" "${typed[@]}" 2>/dev/null)" -- "$cur"))
+    local raw
+    raw="$(jig __complete "$prefix" "$prev" "$cur" "${typed[@]}" 2>/dev/null)"
+    if [[ "$raw" == "__path_dir" ]]; then
+        compopt -o nospace
+        COMPREPLY=($(compgen -d -- ${cur/#\~/$HOME} | sed "s|^$HOME|~|"))
+    elif [[ "$raw" == "__path_file" ]]; then
+        compopt -o nospace
+        COMPREPLY=($(compgen -f -- ${cur/#\~/$HOME} | sed "s|^$HOME|~|"))
+    else
+        COMPREPLY=($(compgen -W "$raw" -- "$cur"))
+    fi
 }
 
 complete -F _jig_complete jig
@@ -55,9 +65,20 @@ _jig() {
     local prefix="${(j:_:)cmd_words}"
 
     local -a typed=("${words[@]:1:$n}")
-    local -a results
-    results=($(jig __complete "$prefix" "$prev" "$cur" "${typed[@]}" 2>/dev/null))
-    compadd -- "${results[@]}"
+    local raw
+    raw="$(jig __complete "$prefix" "$prev" "$cur" "${typed[@]}" 2>/dev/null)"
+    if [[ "$raw" == "__path_dir" ]]; then
+        local expanded="${cur/#\~/$HOME}"
+        local -a results=("${(@f)$(compgen -d -- "$expanded" | sed "s|^$HOME|~|")}")
+        compadd -f -- "${results[@]}"
+    elif [[ "$raw" == "__path_file" ]]; then
+        local expanded="${cur/#\~/$HOME}"
+        local -a results=("${(@f)$(compgen -f -- "$expanded" | sed "s|^$HOME|~|")}")
+        compadd -f -- "${results[@]}"
+    else
+        local -a results=("${(@f)$raw}")
+        compadd -- "${results[@]}"
+    fi
 }
 
 compdef _jig jig

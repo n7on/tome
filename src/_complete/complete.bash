@@ -90,3 +90,12 @@ _complete_positional() {
     local completer_func="$2"
     _COMPLETER_FUNCS["${func}:__positional"]="$completer_func"
 }
+
+# Register a parameter as a path for completion (called at file scope)
+# Usage: _complete_path "my_func" "param" file|dir
+_complete_path() {
+    local func="$1"
+    local param="$2"
+    local kind="${3:-file}"
+    _COMPLETER_FUNCS["${func}:--${param}"]="__path_${kind}"
+}

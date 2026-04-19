@@ -50,8 +50,11 @@ if [[ "${1:-}" == "__complete" ]]; then
 
     # Prev is a flag: return value or dynamic completions
     if [[ "$_prev" == --* ]]; then
-        if [[ -v _COMPLETER_FUNCS["${_prefix}:${_prev}"] ]]; then
-            "${_COMPLETER_FUNCS[${_prefix}:${_prev}]}" "$_cur"
+        _completer="${_COMPLETER_FUNCS[${_prefix}:${_prev}]:-}"
+        if [[ "$_completer" == "__path_dir" || "$_completer" == "__path_file" ]]; then
+            echo "$_completer"
+        elif [[ -n "$_completer" ]]; then
+            "$_completer" "$_cur"
         elif [[ -v _COMPLETERS["${_prefix}:${_prev}"] ]]; then
             echo "${_COMPLETERS[${_prefix}:${_prev}]}"
         fi
