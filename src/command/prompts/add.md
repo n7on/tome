@@ -65,14 +65,18 @@ namespace_action() {
 
 ## File-scope completion registration (outside the function)
 
+**`_complete_params` is mandatory for every command** — even one with zero user parameters. It registers the command's `--help`/`--debug` flags (and for query commands the `--output`/`--filter`/... flags) and makes the command discoverable by `jig command show`. A command without it will be invocable but won't appear in introspection or tab-completion properly.
+
 ```bash
-_complete_type   "namespace_action" query|action     # default: query
-_complete_params "namespace_action" "target" "ports" # list every user param
+_complete_type   "namespace_action" query|action     # optional: default is query
+_complete_params "namespace_action" "target" "ports" # REQUIRED — list every user param (empty list is fine)
 _complete_values "namespace_action" "ports" "80" "443" "8080"
 _complete_func   "namespace_action" "target" _my_target_completer
 _complete_positional "namespace_action" _my_target_completer
 _complete_path   "namespace_action" "file" file      # file|dir
 ```
+
+For a command with no parameters: `_complete_params "namespace_action"` (no extra args). Still required.
 
 `_my_target_completer` is a function that prints one candidate per line and receives the current partial word as `$1`.
 

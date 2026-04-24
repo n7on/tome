@@ -216,7 +216,7 @@ command_ai_edit() {
 
     echo
     echo "--- diff ---"
-    diff -u --label "$name (current)" --label "$name (proposed)" \
+    diff --color=auto -u --label "$name (current)" --label "$name (proposed)" \
         <(printf '%s\n' "$current") <(printf '%s\n' "$new_code") || true
     echo "--- end ---"
     echo
@@ -252,7 +252,7 @@ _complete_type   "command_ai_edit" action
 _complete_params "command_ai_edit" "name" "prompt" "provider" "yes"
 
 _command_show_complete() {
-    # Load all namespaces to get the full command list
+    # Load all namespaces so their functions are defined in this shell
     local ns_dir ns
     for ns_dir in "$_JIG_DIR/src"/*/; do
         ns="$(basename "$ns_dir")"
@@ -268,15 +268,18 @@ _command_show_complete() {
         done
     done
 
-    local names="" _cmd
-    local -A seen
-    for _key in "${!_PARAMS[@]}"; do
-        _cmd="${_key%%:*}"
-        [[ -v seen[$_cmd] ]] && continue
-        [[ "$_cmd" == _* ]] && continue
-        seen[$_cmd]=1
-        names+="$_cmd "
-    done
+    # Discover commands via declare -F, scoped to loaded namespaces.
+    # Robust against commands that omit _complete_params.
+    local names="" fname
+    while read -r _ _ fname; do
+        [[ "$fname" == _* ]] && continue
+        for ns in "${!_LOADED_MODULES[@]}"; do
+            if [[ "$fname" == "$ns" || "$fname" == "${ns}_"* ]]; then
+                names+="$fname "
+                break
+            fi
+        done
+    done < <(declare -F)
     _complete_filter "$names" "$1"
 }
 _complete_func "command_show" "name" _command_show_complete
