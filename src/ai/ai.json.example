@@ -1,0 +1,12 @@
+{
+    "default": "claude",
+    "default_pack": null,
+    "providers": {
+        "claude": {
+            "cmd": "claude -p --tools \"\""
+        },
+        "codex": {
+            "cmd": "codex exec -"
+        }
+    }
+}
